@@ -3,6 +3,7 @@ using RSBot.Core.Event;
 using RSBot.Core.Network;
 using RSBot.Core.Objects.Inventory;
 using RSBot.Core.Objects.Quests;
+using RSBot.Core.Objects.Skill;
 using RSBot.Core.Objects.Spawn;
 using System;
 using System.Collections.Generic;
@@ -629,7 +630,7 @@ namespace RSBot.Core.Objects
             packet.WriteByte(1);
             packet.WriteUShort(destination.RegionID);
 
-            if (!destination.IsInDungeon)
+            if (!Game.Player.IsInDungeon)
             {
                 packet.WriteShort(destination.XOffset);
                 packet.WriteShort(destination.ZOffset);
@@ -969,6 +970,28 @@ namespace RSBot.Core.Objects
             var callback = new AwaitCallback(null, 0xB0A7);
             PacketManager.SendPacket(packet, PacketDestination.Server, callback);
             callback.AwaitResponse(500);
+        }
+
+        /// <summary>
+        /// Get ability skills
+        /// </summary>
+        /// <param name="abilitySkills">The ability skills</param>
+        public bool TryGetAbilitySkills(out List<SkillInfo> abilitySkills)
+        {
+            var player = Game.Player;
+            abilitySkills = new List<SkillInfo>();
+
+            foreach (var item in player.Inventory.GetEquippedPartItems().Union(player.Avatars))
+            {
+                if (!item.HasAbility(out var abilityItem))
+                    continue;
+
+                var links = abilityItem.GetLinks().Select(skillId => new SkillInfo(skillId, true));
+
+                abilitySkills.AddRange(links);
+            }
+
+            return abilitySkills.Any();
         }
     }
 }
