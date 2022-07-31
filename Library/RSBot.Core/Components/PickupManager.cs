@@ -60,7 +60,7 @@ namespace RSBot.Core.Components
         /// <value>
         ///   <c>true</c> if [use ability pet]; otherwise, <c>false</c>.
         /// </value>
-        public static bool JustPickMyItems => PlayerConfig.Get<bool>("RSBot.Items.Pickup.JustPickMyItems", true);
+        public static bool JustPickMyItems => PlayerConfig.Get<bool>("RSBot.Items.Pickup.JustPickMyItems", false);
 
         /// <summary>
         /// Initializes this instance.
@@ -93,6 +93,10 @@ namespace RSBot.Core.Components
                     if (JustPickMyItems && (e.OwnerJID != playerJid && e.OwnerJID != 0))
                         return false;
 
+                    //Don't pickup items that still belong to another player
+                    if (!JustPickMyItems && e.HasOwner)
+                        return false;
+
                     const int tolerance = 15;
                     var isInside = e.Movement.Source.DistanceTo(centerPosition) <= radius + tolerance;
                     if (!isInside)
@@ -119,16 +123,29 @@ namespace RSBot.Core.Components
                     return;
                 }
 
-                foreach (var item in entities.OrderBy(item => item.Movement.Source.DistanceTo(centerPosition))/*.Take(5)*/)
+                if (UseAbilityPet && Game.Player.HasActiveAbilityPet)
                 {
-                    if (!Running)
-                        return;
+                    foreach (var item in entities.OrderBy(item => item.Movement.Source.DistanceTo(centerPosition))/*.Take(5)*/)
+                    {
+                        if (!Running)
+                            return;
 
-                    if (UseAbilityPet && Game.Player.HasActiveAbilityPet)
                         Game.Player.AbilityPet.Pickup(item.UniqueId);
-                    else
-                        item.Pickup();
+                    }
                 }
+                else
+                {
+                    var itemsToPickup = entities.OrderBy(item => item.Movement.Source.DistanceTo(centerPosition));
+
+                    foreach (var item in itemsToPickup) {
+                        //Make sure the player is at the item's location
+                        Game.Player.MoveTo(item.Movement.Source);
+
+                        item.Pickup();
+                    }
+                }
+
+                
             }
             catch (System.Exception e)
             {
@@ -136,7 +153,7 @@ namespace RSBot.Core.Components
             }
             finally
             {
-                Running = false;
+                Stop();
             }
         }
 

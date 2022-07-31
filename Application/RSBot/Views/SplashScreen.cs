@@ -1,4 +1,6 @@
 ﻿using RSBot.Core;
+using RSBot.Core.Components;
+using RSBot.Views.Dialog;
 using SDUI;
 using SDUI.Controls;
 using System;
@@ -32,42 +34,42 @@ namespace RSBot.Views
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private async void SplashScreen_Load(object sender, EventArgs e)
+        private void SplashScreen_Load(object sender, EventArgs e)
         {
-            using (var updaterDialog = new Updater())
+            if(!LoadProfileConfig())
             {
-                if (await updaterDialog.Check())
-                    updaterDialog.ShowDialog(this);
+                Environment.Exit(0);
+                return;
             }
 
-            GlobalConfig.Load();
-            Kernel.Language = GlobalConfig.Get("RSBot.Language", "English");
+            Kernel.Language = GlobalConfig.Get("RSBot.Language", "en_US");
             ColorScheme.BackColor = Color.FromArgb(GlobalConfig.Get("SDUI.Color", Color.White.ToArgb()));
             LanguageManager.Translate(_mainForm, Kernel.Language);
 
-
             if (!GlobalConfig.Exists("RSBot.SilkroadDirectory") || !File.Exists(GlobalConfig.Get<string>("RSBot.SilkroadDirectory") + "\\media.pk2"))
             {
-                var diag = new OpenFileDialog
+                var dialog = new OpenFileDialog
                 {
                     Title = LanguageManager.GetLang("OpenFileDialogTitle"),
                     Filter = "Executable (*.exe)|*.exe",
                     FileName = "sro_client.exe"
                 };
 
-                var result = diag.ShowDialog(this);
+                var result = dialog.ShowDialog(this);
 
-                var silkroadDirectory = Path.GetDirectoryName(diag.FileName);
+                var silkroadDirectory = Path.GetDirectoryName(dialog.FileName);
 
                 if (result == DialogResult.OK && File.Exists(Path.Combine(silkroadDirectory, "media.pk2")))
                 {
                     GlobalConfig.Set("RSBot.SilkroadDirectory", silkroadDirectory);
-                    GlobalConfig.Set("RSBot.SilkroadExecutable", Path.GetFileName(diag.FileName));
+                    GlobalConfig.Set("RSBot.SilkroadExecutable", Path.GetFileName(dialog.FileName));
 
                     var title = LanguageManager.GetLang("ClientTypeInputDialogTitle");
                     var content = LanguageManager.GetLang("ClientTypeInputDialogContent");
 
                     var clientTypeDialog = new InputDialog(title, title, content, InputDialog.InputType.Combobox);
+                    clientTypeDialog.ShowInTaskbar = true;
+                    clientTypeDialog.StartPosition = FormStartPosition.CenterScreen;
                     clientTypeDialog.Selector.Items.AddRange(Enum.GetNames(typeof(GameClientType)));
                     clientTypeDialog.Selector.SelectedIndex = 1;
                     clientTypeDialog.TopMost = true;
@@ -112,6 +114,40 @@ namespace RSBot.Views
         }
 
         /// <summary>
+        /// Loads the profile configuration.
+        /// </summary>
+        private bool LoadProfileConfig()
+        {
+            if(!ProfileManager.IsProfileLoadedByArgs)
+            {
+                if (ProfileManager.ShowProfileDialog)
+                {
+                    var dialog = new ProfileSelectionDialog();
+                    if (dialog.ShowDialog() != DialogResult.Cancel)
+                        ProfileManager.SetSelectedProfile(dialog.SelectedProfile);
+                    else
+                        return false;
+                }
+                else //Load selected profile without dialog
+                {
+                    var selectedProfile = ProfileManager.SelectedProfile;
+                    var profilePath = ProfileManager.GetProfileFile(selectedProfile);
+
+                    //Configured profile could not be found. Fallback to default profile
+                    if (!string.IsNullOrEmpty(selectedProfile) && !File.Exists(profilePath))
+                        selectedProfile = "Default";
+
+                    ProfileManager.SetSelectedProfile(selectedProfile);
+                }
+            }
+
+            GlobalConfig.Load();
+            Log.Notify($"Loaded profile {ProfileManager.SelectedProfile}");
+
+            return true;
+        }
+
+        /// <summary>
         /// Initializes the bot.
         /// </summary>
         private void InitializeBot()
@@ -139,7 +175,6 @@ namespace RSBot.Views
         /// <param name="e">The <see cref="System.ComponentModel.DoWorkEventArgs"/> instance containing the event data.</param>
         private void referenceDataLoader_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             if (!Game.InitializeArchiveFiles())
             {
                 MessageBox.Show(@"Failed to load game data. Boot process canceled!", @"Initialize Application - Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -147,7 +182,6 @@ namespace RSBot.Views
             }
 
             Game.ReferenceManager.Load(GlobalConfig.Get<int>("RSBot.TranslationIndex", 9));
-            System.Diagnostics.Debug.WriteLine(stopwatch.ElapsedMilliseconds.ToString());
         }
     }
 }
