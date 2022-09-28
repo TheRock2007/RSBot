@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -94,6 +95,9 @@ namespace RSBot.General.Views
             checkStayConnected.Checked = GlobalConfig.Get<bool>("RSBot.General.StayConnected");
             checkBoxBotTrayMinimized.Checked = GlobalConfig.Get<bool>("RSBot.General.TrayWhenMinimize");
             txtStaticCaptcha.Text = GlobalConfig.Get<string>("RSBot.General.StaticCaptcha");
+            checkEnableLoginDelay.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableLoginDelay");
+            numLoginDelay.Value = GlobalConfig.Get("RSBot.General.LoginDelay", 10);
+
             comboBoxClientType.SelectedIndex = (int)Game.ClientType;
 
             if (File.Exists(GlobalConfig.Get<string>("RSBot.SilkroadDirectory") + "\\media.pk2"))
@@ -145,14 +149,14 @@ namespace RSBot.General.Views
                 return;
             }
 
-            foreach (var character in selectedAccount.Characters)
+            foreach (var character in selectedAccount.Characters.Where(n => n != null))
             {
                 var index = comboCharacter.Items.Add(character);
                 if (character == selectedAccount.SelectedCharacter)
                     comboCharacter.SelectedIndex = index;
             }
 
-            if (comboCharacter.SelectedIndex == -1 || 
+            if (comboCharacter.SelectedIndex == -1 ||
                 string.IsNullOrWhiteSpace(selectedAccount.SelectedCharacter))
                 comboCharacter.SelectedIndex = 0;
         }
@@ -185,7 +189,7 @@ namespace RSBot.General.Views
         private void OnExitClient()
         {
             _clientVisible = false;
-            btnStartClient.Text = LanguageManager.GetLang("Start")  + " Client";
+            btnStartClient.Text = LanguageManager.GetLang("Start") + " Client";
 
             if (Game.Clientless)
                 return;
@@ -593,6 +597,30 @@ namespace RSBot.General.Views
                 captchaPanel.Visible = true;
             else
                 captchaPanel.Visible = false;
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkEnableLoginDelay control.
+        /// </summary>
+        /// <param name="sender">
+        /// The source of the event.
+        /// </param>
+        /// <param name="e">
+        /// The <see cref="EventArgs" /> instance containing the event data.
+        /// </param>
+        private void checkEnableLoginDelay_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.EnableLoginDelay", checkEnableLoginDelay.Checked);
+        }
+
+        /// <summary>
+        /// Handles the ValueChanged event of the numLoginDelay control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void numLoginDelay_ValueChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.LoginDelay", numLoginDelay.Value);
         }
     }
 }

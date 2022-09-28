@@ -36,7 +36,7 @@ namespace RSBot.Views
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void SplashScreen_Load(object sender, EventArgs e)
         {
-            if(!LoadProfileConfig())
+            if (!LoadProfileConfig())
             {
                 Environment.Exit(0);
                 return;
@@ -71,7 +71,7 @@ namespace RSBot.Views
                     clientTypeDialog.ShowInTaskbar = true;
                     clientTypeDialog.StartPosition = FormStartPosition.CenterScreen;
                     clientTypeDialog.Selector.Items.AddRange(Enum.GetNames(typeof(GameClientType)));
-                    clientTypeDialog.Selector.SelectedIndex = 1;
+                    clientTypeDialog.Selector.SelectedIndex = 2;
                     clientTypeDialog.TopMost = true;
                     clientTypeDialog.StartPosition = FormStartPosition.CenterScreen;
 
@@ -118,7 +118,7 @@ namespace RSBot.Views
         /// </summary>
         private bool LoadProfileConfig()
         {
-            if(!ProfileManager.IsProfileLoadedByArgs)
+            if (!ProfileManager.IsProfileLoadedByArgs)
             {
                 if (ProfileManager.ShowProfileDialog)
                 {
@@ -166,6 +166,35 @@ namespace RSBot.Views
             //---- Load Botbases ----
             if (!Kernel.BotbaseManager.LoadAssemblies())
                 MessageBox.Show(@"Failed to load botbases. Process canceled!", @"Initialize Application - Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            InitializeMap();
+        }
+
+        /// <summary>
+        /// Initializes the map.
+        /// </summary>
+        private void InitializeMap()
+        {
+            //---- Load Map ----
+            var mapFile = Path.Combine(Environment.CurrentDirectory, "Data", "Game", "map.rsc");
+            var collisionEnabled = GlobalConfig.Get("RSBot.EnableCollisionDetection", true);
+
+            CollisionManager.Enabled = collisionEnabled;
+
+            if (!collisionEnabled)
+            {
+                Log.Warn("[Collision] Collision detection has been deactivated by the user!");
+
+                return;
+            }
+            if (!File.Exists(mapFile))
+            {
+                Log.Error($"[Collisions] Directory {mapFile} not found!");
+
+                return;
+            }
+
+            CollisionManager.Initialize(mapFile);
         }
 
         /// <summary>

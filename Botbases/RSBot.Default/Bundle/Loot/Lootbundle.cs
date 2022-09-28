@@ -3,6 +3,7 @@ using RSBot.Core.Components;
 using RSBot.Core.Objects;
 using RSBot.Core.Objects.Spawn;
 using System.Threading.Tasks;
+using RSBot.Core.Event;
 
 namespace RSBot.Default.Bundle.Loot
 {
@@ -26,18 +27,16 @@ namespace RSBot.Default.Bundle.Loot
 
             //If we use the ability pet, we can attack during the work of the Pickup manager
             if (Config.UseAbilityPet && Game.Player.HasActiveAbilityPet)
-                Task.Run(() => PickupManager.Run(Container.Bot.Area.CenterPosition, Container.Bot.Area.Radius));
-            else
-            {
-                if (Bundles.Loot.Config.DontPickupInBerzerk && Game.Player.Berzerking)
-                    return;
+                Task.Run(() => PickupManager.RunAbilityPet(Container.Bot.Area.Position, Container.Bot.Area.Radius));
+            
+            if (Bundles.Loot.Config.DontPickupInBerzerk && Game.Player.Berzerking || ScriptManager.Running)
+                return;
 
-                //Don't pickup if a mob is selected
-                if (Game.SelectedEntity is SpawnedMonster monster && monster.State.LifeState == LifeState.Alive)
-                    return;
+            //Don't pickup if a mob is selected
+            if (Game.SelectedEntity is SpawnedMonster monster && monster.State.LifeState == LifeState.Alive)
+                return;
 
-                PickupManager.Run(Container.Bot.Area.CenterPosition, Container.Bot.Area.Radius);
-            }
+            PickupManager.RunPlayer(Game.Player.Position, Container.Bot.Area.Position, Container.Bot.Area.Radius);
         }
 
         /// <summary>
@@ -55,8 +54,11 @@ namespace RSBot.Default.Bundle.Loot
 
         public void Stop()
         {
-            if (PickupManager.Running)
-                PickupManager.Stop();
+            if (PickupManager.RunningPlayerPickup)
+                PickupManager.StopPlayerPickup();
+
+            if( PickupManager.RunningAbilityPetPickup )
+                PickupManager.StopAbilityPetPickup();
         }
     }
 }

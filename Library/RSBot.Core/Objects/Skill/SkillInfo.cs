@@ -1,4 +1,5 @@
 ﻿using RSBot.Core.Client.ReferenceObjects;
+using RSBot.Core.Components;
 using RSBot.Core.Network;
 using System;
 
@@ -67,6 +68,7 @@ namespace RSBot.Core.Objects.Skill
         /// Skill can not be casted environment tick
         /// </summary>
         private int _lastCastTick;
+        private int _testTick;
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance has cooldown.
@@ -83,7 +85,7 @@ namespace RSBot.Core.Objects.Skill
         /// <value>
         /// <c>true</c> if this instance can be used; otherwise, <c>false</c>.
         /// </value>
-        public bool DoTCanNotBeCasted
+        public bool CanNotBeCasted
         {
             get
             {
@@ -91,6 +93,21 @@ namespace RSBot.Core.Objects.Skill
                     return false;
 
                 return (Kernel.TickCount - _lastCastTick) < _duration;
+            }
+        }
+
+        /// <summary>
+        /// Temprory fix for issue 377, Really interesting bug!!!
+        /// </summary>
+        [Obsolete]
+        public bool Isbugged
+        {
+            get
+            {
+                if (_testTick == 0)
+                    return false;
+
+                return (Kernel.TickCount - _testTick) > _duration + 10000;
             }
         }
 
@@ -104,16 +121,13 @@ namespace RSBot.Core.Objects.Skill
         {
             get
             {
-                var hasCooldown = HasCooldown;
-                var notEnoughMana = Game.Player.Mana < Record.Consume_MP;
-
-                if (hasCooldown)
+                if (HasCooldown)
                     return false;
 
-                if (notEnoughMana)
+                if (Game.Player.Mana < Record.Consume_MP)
                     return false;
 
-                if (IsDot && DoTCanNotBeCasted)
+                if (CanNotBeCasted)
                     return false;
 
                 return true;
@@ -168,6 +182,7 @@ namespace RSBot.Core.Objects.Skill
         {
             _cooldownTick = Kernel.TickCount;
             _lastCastTick = Kernel.TickCount;
+            _testTick = Kernel.TickCount;
         }
 
         /// <summary>
@@ -185,6 +200,7 @@ namespace RSBot.Core.Objects.Skill
         {
             //_cooldownTick = 0;
             _lastCastTick = 0;
+            Token = 0;
         }
 
         /// <summary>
@@ -201,6 +217,17 @@ namespace RSBot.Core.Objects.Skill
                 return true;
 
             return Record.ReqCommon_MasteryLevel1 < mastery.Level - 20;
+        }
+
+        /// <summary>
+        /// Cast the skill
+        /// </summary>
+        public void Cast(uint target = 0, bool buff = false)
+        {
+            if(buff)
+                SkillManager.CastBuff(this, target);
+            else
+                SkillManager.CastSkill(this, target);
         }
 
         /// <summary>

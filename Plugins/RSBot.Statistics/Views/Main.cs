@@ -8,7 +8,7 @@ using System.Linq;
 using System.Timers;
 using System.Windows.Forms;
 
-namespace RSBot.Statistics.Views
+namespace RSBot.Statistics.Views 
 {
     [System.ComponentModel.ToolboxItem(false)]
     public partial class Main : UserControl
@@ -106,7 +106,7 @@ namespace RSBot.Statistics.Views
 
                 var lvItem = new ListViewItem(calculator.Label) { Tag = calculator };
                 lvItem.SubItems.Add("0");
-
+                
                 switch (calculator.Group)
                 {
                     case StatisticsGroup.Player:
@@ -127,7 +127,7 @@ namespace RSBot.Statistics.Views
 
                 lvStatistics.Items.Add(lvItem);
             }
-
+            
             lvStatistics.EndUpdate();
         }
 
@@ -138,8 +138,10 @@ namespace RSBot.Statistics.Views
         {
             foreach (ListViewItem item in lvStatistics.Items)
             {
-                var calculator = (IStatisticCalculator)item.Tag;
-                item.SubItems[1].Text = string.Format(calculator.ValueFormat, calculator.GetValue());
+                var calculator = (IStatisticCalculator) item?.Tag;
+
+                if (calculator != null)
+                    item.SubItems[1].Text = string.Format(calculator.ValueFormat, calculator.GetValue());
             }
         }
 
@@ -193,6 +195,15 @@ namespace RSBot.Statistics.Views
         {
             foreach (var calculator in CalculatorRegistry.Calculators)
                 calculator.Reset();
+        }
+
+        private void resetToolStripMenuItem_Click( object sender, EventArgs e ) 
+        {
+            foreach( ListViewItem lvItem in lvStatistics.SelectedItems ) 
+            {
+                if( lvItem.Tag is IStatisticCalculator calculator )
+                    calculator.Reset();
+            }
         }
 
         /// <summary>

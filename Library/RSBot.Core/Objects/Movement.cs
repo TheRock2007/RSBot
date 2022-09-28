@@ -1,4 +1,5 @@
 ﻿using RSBot.Core.Network;
+using System;
 
 namespace RSBot.Core.Objects
 {
@@ -35,14 +36,17 @@ namespace RSBot.Core.Objects
         public Position Source;
 
         /// <summary>
-        /// Gets or sets the has source.
+        /// Gets or sets the has angle.
         /// </summary>
         public bool HasAngle;
 
         /// <summary>
         /// Gets or sets the angle.
         /// </summary>
-        public double Angle;
+        public float Angle;
+
+        internal double MovingX, MovingY;
+        internal TimeSpan RemainingTime;
 
         /// <summary>
         /// Motion from packet.
@@ -51,53 +55,41 @@ namespace RSBot.Core.Objects
         /// <returns></returns>
         public static Movement MotionFromPacket(Packet packet)
         {
-            var result = new Movement { HasDestination = packet.ReadBool() };
+            var result = new Movement 
+            { 
+                HasDestination = packet.ReadBool() 
+            };
 
             if (result.HasDestination)
             {
-                result.Destination = new Position
-                {
-                    XSector = packet.ReadByte(),
-                    YSector = packet.ReadByte(),
-                };
-
-                if (!result.Destination.IsInDungeon)
-                {
-                    result.Destination.XOffset = packet.ReadShort();
-                    result.Destination.ZOffset = packet.ReadShort();
-                    result.Destination.YOffset = packet.ReadShort();
-                }
-                else
-                {
-                    result.Destination.XOffset = packet.ReadInt();
-                    result.Destination.ZOffset = packet.ReadInt();
-                    result.Destination.YOffset = packet.ReadInt();
-                }
+                result.Destination = Position.FromPacketConditional(packet, false);
             }
             else
             {
-                var hasSky = packet.ReadBool();  //0 = Spinning, 1 = Sky-/Key-walking
+                result.HasDestination = packet.ReadByte() == 1; //0 = Spinning, 1 = Sky-/Key-walking
+                result.HasAngle = true;
                 result.Angle = packet.ReadShort();
-                result.HasAngle = hasSky;
             }
 
             result.HasSource = packet.ReadBool();
-
             if (result.HasSource)
             {
-                result.Source.XSector = packet.ReadByte();
-                result.Source.YSector = packet.ReadByte();
-                if (!result.Source.IsInDungeon)
+                result.Source = new()
                 {
-                    result.Source.XOffset = packet.ReadShort() / 10;
-                    result.Source.ZOffset = packet.ReadInt() / 10;
-                    result.Source.YOffset = packet.ReadShort() / 10;
+                    RegionId = packet.ReadUShort()
+                };
+
+                if (result.Source.IsInDungeon)
+                {
+                    result.Source.XOffset = packet.ReadInt() / 10f;
+                    result.Source.ZOffset = packet.ReadFloat();
+                    result.Source.YOffset = packet.ReadInt() / 10f;
                 }
                 else
                 {
-                    result.Source.XOffset = packet.ReadInt() / 10;
-                    result.Source.ZOffset = packet.ReadInt() / 10;
-                    result.Source.YOffset = packet.ReadInt() / 10;
+                    result.Source.XOffset = packet.ReadShort() / 10f;
+                    result.Source.ZOffset = packet.ReadFloat();
+                    result.Source.YOffset = packet.ReadShort() / 10f;
                 }
             }
 
@@ -120,26 +112,13 @@ namespace RSBot.Core.Objects
 
             if (result.HasDestination)
             {
-                result.Destination = new Position { XSector = packet.ReadByte(), YSector = packet.ReadByte() };
-
-                if (!result.Destination.IsInDungeon)
-                {
-                    result.Destination.XOffset = packet.ReadShort();
-                    result.Destination.ZOffset = packet.ReadShort();
-                    result.Destination.YOffset = packet.ReadShort();
-                }
-                else
-                {
-                    result.Destination.XOffset = packet.ReadInt();
-                    result.Destination.ZOffset = packet.ReadInt();
-                    result.Destination.YOffset = packet.ReadInt();
-                }
+                result.Destination = Position.FromPacketConditional(packet, false);
             }
             else
             {
-                var hasSky = packet.ReadBool();  //0 = Spinning, 1 = Sky-/Key-walking
+                result.HasDestination = packet.ReadByte() == 1; //0 = Spinning, 1 = Sky-/Key-walking
+                result.HasAngle = true;
                 result.Angle = packet.ReadShort();
-                result.HasAngle = hasSky;
             }
 
             return result;

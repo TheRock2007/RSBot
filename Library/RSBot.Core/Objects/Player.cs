@@ -514,11 +514,6 @@ namespace RSBot.Core.Objects
         public int _lastHpPotionTick;
 
         /// <summary>
-        /// Gets or sets a dictionary of inventory items currently used in an alchemy operation
-        /// </summary>
-        public Dictionary<byte, InventoryItem> ActiveAlchemyItems { get; set; }
-
-        /// <summary>
         /// Gets or sets the last mp potion item tick count
         /// </summary>
         private int _lastMpPotionTick;
@@ -628,7 +623,7 @@ namespace RSBot.Core.Objects
 
             var packet = new Packet(0x7021);
             packet.WriteByte(1);
-            packet.WriteUShort(destination.RegionID);
+            packet.WriteUShort(destination.RegionId);
 
             if (!Game.Player.IsInDungeon)
             {
@@ -746,8 +741,7 @@ namespace RSBot.Core.Objects
             if (elapsed < 1050)
                 return false;
 
-            var typeIdFilter = new TypeIdFilter(3, 3, 2, 6);
-            var slotItem = Inventory.GetItem(typeIdFilter);
+            var slotItem = Inventory.GetItem(p => p.Record.IsUniversalPill || p.Record.IsAbnormalPotion);
             if (slotItem == null)
                 return false;
 
@@ -771,8 +765,7 @@ namespace RSBot.Core.Objects
             if (elapsed < 20050)
                 return false;
 
-            var typeIdFilter = new TypeIdFilter(3, 3, 2, 1);
-            var slotItem = Inventory.GetItem(typeIdFilter);
+            var slotItem = Inventory.GetItem(p => p.Record.IsPurificationPill || p.Record.IsAbnormalPotion);
             if (slotItem == null)
                 return false;
 
@@ -991,7 +984,7 @@ namespace RSBot.Core.Objects
                     if (!item.HasExtraAbility(out var extraAbilityItems))
                         continue;
 
-                    abilitySkills.AddRange(extraAbilityItems.Select(p => new SkillInfo(p.SkillId, true)));
+                    abilitySkills.AddRange(extraAbilityItems.SelectMany(p => p.Skills).Select(skillId => new SkillInfo(skillId, true)));
                 }    
             }
 

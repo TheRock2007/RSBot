@@ -5,112 +5,21 @@ namespace RSBot.Core.Objects
 {
     public struct Position
     {
-        /// <summary>
-        /// Gets the region identifier.
-        /// </summary>
-        public ushort RegionID => BitConverter.ToUInt16(new[] { XSector, YSector }, 0);
-
-        /// <summary>
-        /// Gets or set the regional X sector.
-        /// </summary>
         private byte _XSector;
-
-        public byte XSector
-        {
-            get => !IsInDungeon ? ((WorldXOffset == 0) ? _XSector : (byte)(WorldXOffset / 1920)) : _XSector;
-            set
-            {
-                _XSector = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or set the regional Y sector.
-        /// </summary>
         private byte _YSector;
+        private float _XOffset;
+        private float _YOffset;
 
-        public byte YSector
+        /// <summary>
+        /// Gets or set the region identifier.
+        /// </summary>
+        public ushort RegionId
         {
-            get => !IsInDungeon ? ((WorldYOffset == 0) ? _YSector : (byte)(WorldYOffset / 1920)) : _YSector;
+            get => (ushort)((_YSector << 8) | _XSector);
             set
             {
-                _YSector = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or set the regional XOffset
-        /// </summary>
-        public float WorldXOffset;
-
-        /// <summary>
-        /// Gets or set the regional YOffset
-        /// </summary>
-        public float WorldYOffset;
-
-        /// <summary>
-        /// Gets or sets the x offset.
-        /// </summary>
-        public float XOffset
-        {
-            get => IsInDungeon ? XOffsetFromX(XCoordinate) : WorldXOffset % 1920;
-            set
-            {
-                WorldXOffset = _XSector * 1920 + value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the z offset.
-        /// </summary>
-        public float ZOffset;
-
-        /// <summary>
-        /// Gets or sets the y offset.
-        /// </summary>
-        public float YOffset
-        {
-            get => IsInDungeon ? YOffsetFromY(YCoordinate) : WorldYOffset % 1920;
-            set
-            {
-                WorldYOffset = _YSector * 1920 + value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the angle.
-        /// </summary>
-        public short Angle;
-
-        /// <summary>
-        /// Gets the x coordinate.
-        /// </summary>
-        /// <value>
-        /// The x coordinate.
-        /// </value>
-        public float XCoordinate
-        {
-            get => (WorldXOffset - (135 * 1920)) / 10;
-            set
-            {
-                XSector = XSectorFromX(value);
-                XOffset = XOffsetFromX(value);
-            }
-        }
-
-        /// <summary>
-        /// Gets the y coordinate.
-        /// </summary>
-        /// <value>
-        /// The y coordinate.
-        /// </value>
-        public float YCoordinate
-        {
-            get => (WorldYOffset - (92 * 1920)) / 10;
-            set
-            {
-                YSector = YSectorFromY(value);
-                YOffset = YOffsetFromY(value);
+                _YSector = (byte)(value >> 8);
+                _XSector = (byte)(value & 0xFF);
             }
         }
 
@@ -118,64 +27,163 @@ namespace RSBot.Core.Objects
         /// Gets a value indicating whether this instance is in dungeon.
         /// </summary>
         /// <value><c>true</c> if this instance is in dungeon; otherwise, <c>false</c>.</value>
-        public bool IsInDungeon => _YSector == 0x80;
-        
-        #region Helper
+        public bool IsInDungeon => RegionId > short.MaxValue;
 
         /// <summary>
-        /// Reads all requierd data from the packet and returns a new Postion object.
+        /// Gets the regional X sector.
         /// </summary>
-        /// <param name="packet">The packet.</param>
-        /// <returns></returns>
-        public static Position FromPacket(Packet packet)
-        {
-            return new Position
-            {
-                XSector = packet.ReadByte(),
-                YSector = packet.ReadByte(),
-                XOffset = packet.ReadFloat(),
-                ZOffset = packet.ReadFloat(),
-                YOffset = packet.ReadFloat(),
-                Angle = packet.ReadShort()
-            };
-        }
-
+        public byte XSector => _XSector;
 
         /// <summary>
-        /// Reads all requierd data from the packet and returns a new Postion object.
+        /// Gets the regional Y sector.
         /// </summary>
-        /// <param name="packet">The packet.</param>
-        /// <returns></returns>
-        public static Position FromPacketInt(Packet packet)
+        public byte YSector => _YSector;
+
+        /// <summary>
+        /// Gets or set the position X from map
+        /// </summary>
+        public float XOffset
         {
-            return new Position
+            get => _XOffset;
+            set
             {
-                XSector = packet.ReadByte(),
-                YSector = packet.ReadByte(),
-                XOffset = packet.ReadInt(),
-                ZOffset = packet.ReadInt(),
-                YOffset = packet.ReadInt()
-            };
+                _XOffset = value;
+
+                if (IsInDungeon)
+                    return;
+
+                while (_XOffset < 0)
+                {
+                    _XOffset += 1920;
+                    _XSector -= 1;
+                }
+
+                while (_XOffset > 1920)
+                {
+                    _XOffset -= 1920;
+                    _XSector += 1;
+                }
+            }
+        }
+        /// <summary>
+        /// Gets or set the position Y from map.
+        /// </summary>
+        public float YOffset
+        {
+            get => _YOffset;
+            set
+            {
+                _YOffset = value;
+
+                if (IsInDungeon)
+                    return;
+
+                while (_YOffset < 0)
+                {
+                    _YOffset += 1920;
+                    _YSector -= 1;
+                }
+
+                while (_YOffset > 1920)
+                {
+                    _YOffset -= 1920;
+                    _YSector += 1;
+                }
+            }
         }
 
-        public static Position FromOffsets(float xOffset, float yOffset, float zOffset, byte xSector, byte ySector)
-        {
-            return new Position
-            {
-                XSector = xSector,
-                YSector = ySector,
-                XOffset = xOffset,
-                ZOffset = zOffset,
-                YOffset = yOffset,
-                Angle = 0
-            };
-        }
-        public static Position FromOffsets(float xOffset, float yOffset, float zOffset, ushort regionId)
-        {
-            var xSec = GetXSector(regionId);
-            var ySec = GetYSector(regionId);
+        /// <summary>
+        /// Gets or set the position Z from map.
+        /// </summary>
+        public float ZOffset { get; set; }
 
-            return FromOffsets(xOffset, yOffset, zOffset, xSec, ySec);
+        /// <summary>
+        /// Gets or sets the angle.
+        /// </summary>
+        public short Angle { get; set; }
+
+        /// <summary>
+        /// Gets or sets the world id.
+        /// </summary>
+        public short WorldId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the layer id.
+        /// </summary>
+        public short LayerId { get; set; }
+
+        /// <summary>
+        /// Gets the x coordinate.
+        /// </summary>
+        /// <value>
+        /// The x coordinate.
+        /// </value>
+        public float X => IsInDungeon ? _XOffset / 10 : (_XSector - 135) * 192 + _XOffset / 10;
+
+        /// <summary>
+        /// Gets the y coordinate.
+        /// </summary>
+        /// <value>
+        /// The y coordinate.
+        /// </value>
+        public float Y => IsInDungeon ? _YOffset / 10 : (_YSector - 92) * 192 + _YOffset / 10;
+
+        /// <summary>
+        /// Gets offset from x sector.
+        /// </summary>
+        public float XSectorOffset => IsInDungeon ? (127 * 192 + _XOffset / 10) * 10 % 1920 : _XOffset;
+
+        /// <summary>
+        /// Gets offset from y sector.
+        /// </summary>
+        public float YSectorOffset => IsInDungeon ? (128 * 192 + _YOffset / 10) * 10 % 1920 : _YOffset;
+
+        /// <summary>
+        /// Creates a position by using world map coordinates
+        /// </summary>
+        /// <param name="regionId">Region Id required for dungeon maps</param>
+        public Position(float x, float y, ushort regionId = 0)
+            : this()
+        {
+            RegionId = regionId;
+
+            // World map coordinates has been provided
+            if (!IsInDungeon)
+            {
+                var xOffset = (int)(Math.Abs(x) % 192 * 10);
+                if (x < 0)
+                    xOffset = 1920 - xOffset;
+
+                var yOffset = (int)(Math.Abs(y) % 192 * 10);
+                if (y < 0)
+                    yOffset = 1920 - yOffset;
+
+                _XSector = (byte)Math.Round((x - xOffset / 10f) / 192f + 135);
+                _YSector = (byte)Math.Round((y - yOffset / 10f) / 192f + 92);
+
+                XOffset = xOffset;
+                YOffset = yOffset;
+                return;
+            }
+
+            // Dungeon map coordinates
+
+            XOffset = x * 10;
+            YOffset = y * 10;
+        }
+
+        /// <summary>
+        /// Creates a position using map offsets
+        /// </summary>
+        public Position(float xOffset, float yOffset, float zOffset, byte xSector, byte ySector)
+            : this()
+        {
+            _XSector = xSector;
+            _YSector = ySector;
+
+            XOffset = xOffset;
+            YOffset = yOffset;
+            ZOffset = zOffset;
         }
 
         /// <summary>
@@ -185,49 +193,100 @@ namespace RSBot.Core.Objects
         /// <returns></returns>
         public double DistanceTo(Position position)
         {
-            return Math.Sqrt(Math.Pow(XCoordinate - position.XCoordinate, 2) + Math.Pow(YCoordinate - position.YCoordinate, 2));
+            /*
+            // Distance cannot be calculated
+            if (IsInDungeon != position.IsInDungeon)
+                return double.MaxValue;
+            // Make sure they are in the same dungeon
+            if (IsInDungeon && RegionId != position.RegionId)
+                return double.MaxValue;
+            */
+            // Both are in the same region
+            return Math.Sqrt(Math.Pow(X - position.X, 2) + Math.Pow(Y - position.Y, 2));
         }
 
+        /// <summary>
+        /// Reads all requierd data from the packet and returns a new Postion object.
+        /// </summary>
+        /// <param name="packet">The packet.</param>
+        /// <returns></returns>
+        public static Position FromPacket(Packet packet)
+        {
+            return new()
+            {
+                RegionId = packet.ReadUShort(),
+                XOffset = packet.ReadFloat(),
+                ZOffset = packet.ReadFloat(),
+                YOffset = packet.ReadFloat(),
+                Angle = packet.ReadShort()
+            };
+        }
+
+        /// <summary>
+        /// Reads all requierd data from the packet and returns a new Postion object.
+        /// </summary>
+        /// <param name="packet">The packet.</param>
+        /// <returns></returns>
+        public static Position FromPacketInt(Packet packet)
+        {
+            return new()
+            {
+                RegionId = packet.ReadUShort(),
+                XOffset = packet.ReadInt(),
+                ZOffset = packet.ReadInt(),
+                YOffset = packet.ReadInt()
+            };
+        }
+
+        /// <summary>
+        /// Reads all requierd data from the packet and returns a new Postion object.
+        /// </summary>
+        /// <param name="packet">The packet.</param>
+        /// <returns></returns>
+        public static Position FromPacketConditional(Packet packet, bool parseLayerWorldId = true)
+        {
+            Position position = new()
+            {
+                RegionId = packet.ReadUShort()
+            };
+
+            if (!position.IsInDungeon)
+            {
+                position.XOffset = packet.ReadShort();
+                position.ZOffset = packet.ReadShort();
+                position.YOffset = packet.ReadShort();
+            }
+            else
+            {
+                position.XOffset = packet.ReadInt();
+                position.ZOffset = packet.ReadInt();
+                position.YOffset = packet.ReadInt();
+            }
+
+            if (parseLayerWorldId)
+            {
+                position.WorldId = packet.ReadShort();
+                position.LayerId = packet.ReadShort();
+            }
+
+            return position;
+        }
+
+        /// <summary>
+        /// Calculates the distance to the current player
+        /// </summary>
         public double DistanceToPlayer()
         {
             return DistanceTo(Game.Player.Movement.Source);
         }
 
-        public byte XSectorFromX(float x)
-        {
-            if (IsInDungeon)
-                return XSector;
-
-            return (byte)((x / 192.0) + 135.0);
-        }
-
-        public byte YSectorFromY(float y)
-        {
-            if (IsInDungeon)
-                return YSector;
-
-            return (byte)((y / 192.0) + 92);
-        }
-
-        public float XOffsetFromX(float x)
-        {
-            return (float)((x / 192.0 - XSectorFromX(x) + 135.0) * 192.0 * 10.0);
-        }
-
-        public float YOffsetFromY(float y)
-        {
-            return (float)((y / 192.0 - YSectorFromY(y) + 92.0) * 192.0 * 10.0);
-        }
-
-        public static byte GetXSector(ushort regionId)
-        {
-            return BitConverter.GetBytes(regionId)[0];
-        }
-
-        public static byte GetYSector(ushort regionId)
-        {
-            return BitConverter.GetBytes(regionId)[1];
-        }
+        /// <summary>
+        /// Get sector by offset
+        /// </summary>
+        /// <param name="offset">The offset</param>
+        /// <returns>The generated sector</returns>
+        public byte GetSectorFromOffset(float offset)
+            => (byte)(((128.0 * 192.0 + (128 * 192 + offset / 10)) / 192.0) - 128);
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
@@ -237,9 +296,7 @@ namespace RSBot.Core.Objects
         /// </returns>
         public override string ToString()
         {
-            return $"X:{XCoordinate:0.0} Y:{YCoordinate:0.0}";
+            return $"X:{X:0.0} Y:{Y:0.0}";
         }
-
-        #endregion Helper
     }
 }

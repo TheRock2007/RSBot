@@ -34,43 +34,55 @@ namespace RSBot.Core.Network.Handler.Agent.Entity
             var movement = Movement.MotionFromPacket(packet);
             if (uniqueId == Game.Player.UniqueId || uniqueId == Game.Player.Vehicle?.UniqueId)
             {
+                // Set source from movement
                 if (movement.HasSource)
                     Game.Player.SetSource(movement.Source);
 
-                if (movement.HasDestination)
+                if (movement.HasAngle)
                 {
-                    Game.Player.Move(movement.Destination);
-
-                    if (CollisionManager.Region == null || CollisionManager.Region.Id != movement.Destination.RegionID)
+                    // Movement through angle
+                    if (movement.HasDestination)
                     {
-                        Game.NearbyTeleporters = Game.ReferenceManager.GetTeleporters(movement.Destination.RegionID);
-
-                        Log.Debug($"Found teleporters: {Game.NearbyTeleporters.Length}");
-
-                        CollisionManager.Update(movement.Destination.RegionID);
+                        Game.Player.Move(movement.Angle);
+                        EventManager.FireEvent("OnPlayerMove");
                     }
-                }
-                else
-                {
-                    Game.Player.Move(movement.Destination.Angle);
+                    else
+                    {
+                        Game.Player.SetAngle(movement.Angle);
+                    }
+                    return;
                 }
 
+                // Movement through click
+                Game.Player.Move(movement.Destination);
                 EventManager.FireEvent("OnPlayerMove");
-
                 return;
             }
 
-            if (!SpawnManager.TryGetEntity<SpawnedEntity>(uniqueId, out var entity)) 
+            if (!SpawnManager.TryGetEntity<SpawnedEntity>(uniqueId, out var entity))
                 return;
 
+            // Set source from movement
             if (movement.HasSource)
                 entity.SetSource(movement.Source);
 
-            if (movement.HasDestination)
-                entity.Move(movement.Destination);
-            else
-                entity.Move(movement.Destination.Angle);
+            if (movement.HasAngle)
+            {
+                // Movement through angle
+                if (movement.HasDestination)
+                {
+                    entity.Move(movement.Angle);
+                    EventManager.FireEvent("OnEntityMove");
+                }
+                else
+                {
+                    entity.SetAngle(movement.Angle);
+                }
+                return;
+            }
 
+            // Movement through click
+            entity.Move(movement.Destination);
             EventManager.FireEvent("OnEntityMove", uniqueId);
         }
     }

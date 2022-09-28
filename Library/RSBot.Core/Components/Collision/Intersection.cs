@@ -1,21 +1,16 @@
 ﻿using System;
+using RSBot.Core.Components.Collision.Calculated;
+using RSBot.Core.Objects;
 
 namespace RSBot.Core.Components.Collision
 {
     /// <summary>
-    /// Taken from https://github.com/justcoding121/Advanced-Algorithms/blob/master/Advanced.Algorithms/Geometry/LineIntersection.cs
+    /// Taken from https://github.com/justcoding121/Advanced-Algorithms/blob/master/Advanced.Algorithms/Geometry/Intersection.cs
     /// Slightly modified to match RSBot purposes!
     /// </summary>
-    internal class LineIntersection
+    internal class Intersection
     {
-        /// <summary>
-        ///  Returns Point of intersection if do intersect otherwise default Point (null)
-        /// </summary>
-        /// <param name="lineA"></param>
-        /// <param name="lineB"></param>
-        /// <param name="tolerance">precision tolerance.</param>
-        /// <returns>The point of intersection.</returns>
-        public static bool FindIntersection(Line lineA, Line lineB, double tolerance = 1)
+        public static (Position collidedAt, CalculatedCollisionLine collidedWith)? FindIntersection(CalculatedCollisionLine lineA, CalculatedCollisionLine lineB, double tolerance = 1)
         {
             double x1 = lineA.Source.X, y1 = lineA.Source.Y;
             double x2 = lineA.Destination.X, y2 = lineA.Destination.Y;
@@ -80,14 +75,19 @@ namespace RSBot.Core.Components.Collision
                 if (!(Math.Abs(-m1 * x + y - c1) < tolerance
                     && Math.Abs(-m2 * x + y - c2) < tolerance))
                 {
-                    return false;
+                    return null;
                 }
             }
 
             //x,y can intersect outside the line segment since line is infinitely long
             //so finally check if x, y is within both the line segments
-            return IsInsideLine(lineA, x, y) &&
-                   IsInsideLine(lineB, x, y);
+            if (IsInsideLine(lineA, x, y) &&
+                IsInsideLine(lineB, x, y))
+            {
+                return new(new Position((float)x, (float)y), lineB);
+            }
+            //return default null (no intersection)
+            return null;
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace RSBot.Core.Components.Collision
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        private static bool IsInsideLine(Line line, double x, double y)
+        private static bool IsInsideLine(CalculatedCollisionLine line, double x, double y)
         {
             var isInX = (x >= line.Source.X && x <= line.Destination.X
                          || x >= line.Destination.X && x <= line.Source.X);

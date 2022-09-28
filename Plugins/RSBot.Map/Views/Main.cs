@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RSBot.Map.Views
@@ -47,6 +46,11 @@ namespace RSBot.Map.Views
         /// The Y Sector identifier
         /// </summary>
         private byte _currentYSec;
+
+        /// <summary>
+        /// The current layer path
+        /// </summary>
+        private string _currentLayerPath;
 
         /// <summary>
         /// The map points
@@ -140,7 +144,7 @@ namespace RSBot.Map.Views
 
                 if (entityIndex == 0)
                 {
-                    gfx.DrawImage(RotateImage(img, Geometry.RadianToDegree(Game.Player.Movement.Angle)), 
+                    gfx.DrawImage(RotateImage(img, Geometry.RadianToDegree(Game.Player.Movement.Angle)),
                         x - img.Width / 2,
                         y - img.Height / 2);
                 }
@@ -195,13 +199,13 @@ namespace RSBot.Map.Views
                 var x = GetMapX(position);
                 var y = GetMapY(position);
 
-                var semiTransBrush = new SolidBrush(Color.FromArgb(90, color.R, color.G, color.B));
+                using var brush = new SolidBrush(color);
 
 
                 var diameterF = diameter * _scale;
                 var point = new PointF(x - diameterF / 2, y - diameterF / 2);
 
-                gfx.FillEllipse(semiTransBrush, new RectangleF(point, new SizeF(diameterF, diameterF)));
+                gfx.FillEllipse(brush, new RectangleF(point, new SizeF(diameterF, diameterF)));
                 gfx.DrawEllipse(new Pen(color), new RectangleF(point, new SizeF(diameterF, diameterF)));
             }
             catch { }
@@ -219,7 +223,15 @@ namespace RSBot.Map.Views
             {
 #if DEBUG
                 if (Game.Player.Movement.HasDestination)
-                    DrawCircleAt(graphics, Game.Player.Movement.Destination, Color.DarkBlue, 5);
+                {
+                    DrawCircleAt(graphics, Game.Player.Movement.Destination, Color.Red, 5);
+                    DrawCircleAt(graphics, Game.Player.Movement.Destination, Color.Black, 3);
+
+                    using var pen = new Pen(Color.White, 1);
+                    pen.DashStyle = DashStyle.Dash;
+                    DrawLineAt(graphics, Game.Player.Movement.Source, Game.Player.Movement.Destination, pen);
+
+                }
 #endif
                 //Draw walk script
                 if (ScriptManager.Running)
@@ -230,7 +242,7 @@ namespace RSBot.Map.Views
                         var nextPosition = walkScript[i];
 
                         DrawLineAt(graphics, i != 0 ? walkScript[i - 1] : nextPosition, nextPosition, Pens.LightBlue);
-                        DrawCircleAt(graphics, nextPosition, Color.CornflowerBlue, 4);
+                        DrawCircleAt(graphics, nextPosition, Color.CornflowerBlue.Alpha(150), 4);
                     }
                 }
 
@@ -240,10 +252,10 @@ namespace RSBot.Map.Views
                         float.TryParse(PlayerConfig.Get("RSBot.Area.Y", "0"), out var yCoord) &&
                         int.TryParse(PlayerConfig.Get("RSBot.Area.Radius", "50"), out var radius))
                     {
-                        var position = new Position { XCoordinate = xCoord, YCoordinate = yCoord };
+                        var position = new Position(xCoord, yCoord);
 
-                        DrawCircleAt(graphics, position, Color.FromArgb(100, 250, 50, 50), radius * 2);
-                        DrawCircleAt(graphics, position, Color.SteelBlue, radius);
+                        DrawCircleAt(graphics, position, Color.DarkRed.Alpha(100), radius * 2);
+                        DrawCircleAt(graphics, position, Color.LawnGreen.Alpha(50), radius);
                     }
                 }
 
@@ -259,7 +271,7 @@ namespace RSBot.Map.Views
                             if (entry.Rarity == MonsterRarity.Unique || entry.Rarity == MonsterRarity.Unique2)
                                 DrawPointAt(graphics, entry.Movement.Source, 5);
                             else
-                                DrawPointAt(graphics, entry.Movement.Source, 4);
+                                DrawPointAt(graphics, entry.Position, !entry.IsBehindObstacle ? 4 : 2); //Other style for mobs behind obstacles
                         }
                     }
                 }
@@ -270,8 +282,12 @@ namespace RSBot.Map.Views
                     {
                         foreach (var entry in coses)
                         {
-                            AddGridItem(entry.Name, "", entry.Record.Level, entry.Movement.Source);
-                            DrawPointAt(graphics, entry.Movement.Source, 1);
+                            // Avoid painting vehicles from main player
+                            if (Game.Player.Vehicle?.UniqueId != entry.UniqueId)
+                            {
+                                AddGridItem(entry.Name, "Pet", entry.Record.Level, entry.Movement.Source);
+                                DrawPointAt(graphics, entry.Movement.Source, 1);
+                            }
                         }
                     }
                 }
@@ -324,7 +340,7 @@ namespace RSBot.Map.Views
                     {
                         foreach (var entry in portals)
                         {
-                            AddGridItem(entry.Record.GetRealName(), "", 0, entry.Movement.Source);
+                            AddGridItem(entry.Record.GetRealName(), "Teleport", 0, entry.Movement.Source);
                             DrawPointAt(graphics, entry.Movement.Source, 7);
                         }
                     }
@@ -338,10 +354,35 @@ namespace RSBot.Map.Views
             lvMonster.EndUpdate();
         }
 
-        private Image LoadSectorImage(int xSec, int ySec)
+        private void DrawCollisions(Graphics gfx)
         {
-            var sectorImgName = $"{xSec}x{ySec}.ddj";
+            if (CollisionManager.HasActiveMeshes)
+            {
+                //Draw collisions
+                foreach (var collisionNavmesh in CollisionManager.ActiveCollisionMeshes)
+                {
+                    foreach (var collider in collisionNavmesh.Collisions)
+                        DrawLineAt(gfx, collider.Source, collider.Destination, Pens.Red);
+                }
+                if (!SpawnManager.TryGetEntities<SpawnedEntity>(out var entities))
+                    return;
+                foreach (var entity in entities)
+                {
+                    var collision =
+                        CollisionManager.GetCollisionBetween(Game.Player.Position, entity.Position);
+                    if (!collision.HasValue)
+                        continue;
+                    var rayPen = new Pen(Color.DeepSkyBlue);
+                    rayPen.DashStyle = DashStyle.Dot;
+                    rayPen.EndCap = LineCap.Square;
 
+                    DrawLineAt(gfx, Game.Player.Position, collision.Value.CollidedAt, Pens.DeepSkyBlue);
+                    DrawLineAt(gfx, collision.Value.CollidedWith.Source, collision.Value.CollidedWith.Destination, Pens.Yellow);
+                }
+            }
+        }
+        private Image LoadSectorImage(string sectorImgName)
+        {
             if (_cachedImages.ContainsKey(sectorImgName))
                 return (Image)_cachedImages[sectorImgName].Clone();
 
@@ -351,26 +392,99 @@ namespace RSBot.Map.Views
                 _cachedImages.Add(sectorImgName, img);
                 return (Image)img.Clone();
             }
-        
+
             return new Bitmap(SectorSize, SectorSize);
         }
-
+        /// <summary>
+        /// Get path from map layer
+        /// </summary>
+        private string GetLayerPath(Position p)
+        {
+            if (p.IsInDungeon)
+            {
+                switch (p.RegionId)
+                {
+                    // Donwhang cave
+                    case 32769:
+                        if (p.ZOffset > 345)
+                            return "dh_a01_floor04_{0}x{1}.ddj";
+                        if (p.ZOffset > 230)
+                            return "dh_a01_floor03_{0}x{1}.ddj";
+                        if (p.ZOffset > 115)
+                            return "dh_a01_floor02_{0}x{1}.ddj";
+                        return "dh_a01_floor01_{0}x{1}.ddj";
+                    // QinShi Tomb
+                    case 32770:
+                        return "qt_a01_floor06_{0}x{1}.ddj";
+                    case 32771:
+                        return "qt_a01_floor05_{0}x{1}.ddj";
+                    case 32772:
+                        return "qt_a01_floor04_{0}x{1}.ddj";
+                    case 32773:
+                        return "qt_a01_floor03_{0}x{1}.ddj";
+                    case 32774:
+                        return "qt_a01_floor02_{0}x{1}.ddj";
+                    case 32775:
+                        return "qt_a01_floor01_{0}x{1}.ddj";
+                    // Job Temple
+                    case 32779:
+                    case 32780:
+                    case 32781:
+                    case 32782:
+                    case 32784:
+                        return "rn_sd_egypt1_01_{0}x{1}.ddj";
+                    case 32783:
+                        return "rn_sd_egypt1_02_{0}x{1}.ddj";
+                    // Fortress Dungeon
+                    case 32785:
+                        return "fort_dungeon01_{0}x{1}.ddj";
+                    // Mt. Flame
+                    case 32786:
+                        return "flame_dungeon01_{0}x{1}.ddj";
+                    // Jupiter Temple Rooms
+                    case 32787:
+                        return "rn_jupiter_02_{0}x{1}.ddj";
+                    case 32788:
+                        return "rn_jupiter_03_{0}x{1}.ddj";
+                    case 32789:
+                        return "rn_jupiter_04_{0}x{1}.ddj";
+                    case 32790:
+                        return "rn_jupiter_01_{0}x{1}.ddj";
+                    // Bahgdad Room
+                    case 32793:
+                        return "RN_ARABIA_FIELD_02_BOSS_{0}x{1}.ddj";
+                        // 32791 - GM's Room
+                        // 32792 - Fortress Prison
+                }
+            }
+            // Default as world map
+            return "{0}x{1}.ddj";
+        }
         /// <summary>
         /// Redraw the map image
         /// </summary>
         private void RedrawMap()
         {
-            var xSec = Game.Player.Movement.Source.XSector;
-            var ySec = Game.Player.Movement.Source.YSector;
+            // Set layer path & sectors
+            var p = Game.Player.Movement.Source;
 
-            if (xSec == _currentXSec && ySec == _currentYSec)
+            var layerPath = GetLayerPath(p);
+            if (p.XSector == _currentXSec && p.YSector == _currentYSec && _currentLayerPath == layerPath)
                 return;
+
+            _currentXSec = p.XSector;
+            _currentYSec = p.YSector;
+
+            if (p.IsInDungeon)
+            {
+                _currentXSec = p.GetSectorFromOffset(p.XOffset);
+                _currentYSec = p.GetSectorFromOffset(p.YOffset);
+            }
+
+            _currentLayerPath = layerPath;
 
             if (_cachedImages.Count >= 25)
                 _cachedImages.Clear();
-
-            _currentXSec = xSec;
-            _currentYSec = ySec;
 
             _currentSectorGraphic = new Bitmap(SectorSize * 3, SectorSize * 3, PixelFormat.Format32bppArgb);
 
@@ -381,14 +495,15 @@ namespace RSBot.Map.Views
                 {
                     for (var z = 0; z < GridSize; z++)
                     {
-                        var bitmap = LoadSectorImage(_currentXSec + x - 1, _currentYSec + z - 1);
+                        var sectorImgName = string.Format(layerPath, _currentXSec + x - 1, _currentYSec + z - 1);
+                        var bitmap = LoadSectorImage(sectorImgName);
                         var pos = new Point(bitmap.Width * x, bitmap.Height * (GridSize - 1 - z));
 
                         gfx.DrawImage(bitmap, pos);
 
 #if DEBUG
                         var pen = new Pen(Color.Black);
-                        pen.DashStyle  = DashStyle.Dot;
+                        pen.DashStyle = DashStyle.Dot;
                         gfx.DrawRectangle(pen, new Rectangle(pos, new Size(SectorSize, SectorSize)));
 #endif
                         bitmap.Dispose();
@@ -429,8 +544,8 @@ namespace RSBot.Map.Views
                 e.Graphics.PixelOffsetMode = PixelOffsetMode.HighSpeed;
                 e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
 
-                var pointX = mapCanvas.Width / 2f - SectorSize - Game.Player.Movement.Source.XOffset / 10f * _scale;
-                var pointY = mapCanvas.Height / 2f - SectorSize * 2f + Game.Player.Movement.Source.YOffset / 10f * _scale;
+                var pointX = mapCanvas.Width / 2f - SectorSize - Game.Player.Movement.Source.XSectorOffset / 10f * _scale;
+                var pointY = mapCanvas.Height / 2f - SectorSize * 2f + Game.Player.Movement.Source.YSectorOffset / 10f * _scale;
 
                 var point = new PointF(pointX, pointY);
 
@@ -438,6 +553,10 @@ namespace RSBot.Map.Views
 
                 PopulateMapAndGrid(e.Graphics);
                 DrawPointAt(e.Graphics, Game.Player.Movement.Source, 0);
+
+#if DEBUG
+                DrawCollisions(e.Graphics);
+#endif
             }
         }
 
@@ -446,13 +565,13 @@ namespace RSBot.Map.Views
             if (Game.Player == null)
                 return;
 
-            lblRegion.Text = Game.ReferenceManager.GetTranslation(Game.Player.Movement.Source.RegionID.ToString());
+            lblRegion.Text = Game.ReferenceManager.GetTranslation(Game.Player.Movement.Source.RegionId.ToString());
 
-            lblX.Text = Game.Player.Movement.Source.XCoordinate.ToString("0.00");
-            lblY.Text = Game.Player.Movement.Source.YCoordinate.ToString("0.00");
+            lblX.Text = Game.Player.Movement.Source.X.ToString("0.0");
+            lblY.Text = Game.Player.Movement.Source.Y.ToString("0.0");
 
 #if DEBUG
-            labelSectorInfo.Text = $"{Game.Player.Movement.Source.RegionID} ({Game.Player.Movement.Source.XSector}x{Game.Player.Movement.Source.YSector})";
+            labelSectorInfo.Text = $"{Game.Player.Movement.Source.RegionId} ({Game.Player.Movement.Source.XSector}x{Game.Player.Movement.Source.YSector})";
 #endif
 
             RedrawMap();
@@ -479,24 +598,21 @@ namespace RSBot.Map.Views
 
         private float GetMapX(Position gamePosition)
         {
-            return mapCanvas.Width / 2f + (gamePosition.XCoordinate - Game.Player.Movement.Source.XCoordinate) * _scale;
+            return mapCanvas.Width / 2f + (gamePosition.X - Game.Player.Movement.Source.X) * _scale;
         }
 
         private float GetMapY(Position gamePosition)
         {
-            return mapCanvas.Height / 2f + (gamePosition.YCoordinate - Game.Player.Movement.Source.YCoordinate) * _scale * -1.0f;
+            return mapCanvas.Height / 2f + (gamePosition.Y - Game.Player.Movement.Source.Y) * _scale * -1.0f;
         }
 
         private void mapCanvas_MouseClick(object sender, MouseEventArgs e)
         {
-            var mapX = (Game.Player.Movement.Source.XCoordinate + (((mapCanvas.Width / 2f - e.X) / SectorSize) * 192f * -1f));
-            var mapY = (Game.Player.Movement.Source.YCoordinate + (((mapCanvas.Height / 2f - e.Y) / SectorSize) * 192f));
+            var position = Game.Player.Movement.Source;
+            position.XOffset = (Game.Player.Movement.Source.XOffset + (((mapCanvas.Width / 2f - e.X) / SectorSize) * 192f * 10 * -1f));
+            position.YOffset = (Game.Player.Movement.Source.YOffset + (((mapCanvas.Height / 2f - e.Y) / SectorSize) * 192f * 10));
 
-            Game.Player.MoveTo(new Position
-            {
-                XCoordinate = mapX,
-                YCoordinate = mapY
-            }, false);
+            Game.Player.MoveTo(position, false);
         }
     }
 }

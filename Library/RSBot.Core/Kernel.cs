@@ -1,6 +1,7 @@
 ﻿using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Network;
+using RSBot.Core.Objects;
 using RSBot.Core.Plugins;
 using System;
 using System.Linq;
@@ -72,27 +73,43 @@ namespace RSBot.Core
             RegisterNetworkHooks();
 
             _updaterTokenSource = new CancellationTokenSource();
-            
+
             Task.Factory.StartNew(ComponentUpdaterAsync, _updaterTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current);
         }
 
         private static async Task ComponentUpdaterAsync()
         {
+            var lastUpdate = TickCount;
+
             while (!_updaterTokenSource.IsCancellationRequested)
             {
-                await Task.Delay(100);
+                await Task.Delay(10);
                 if (!Game.Ready)
                     continue;
 
-                Game.Player.Update();
-                Game.Player.Transport?.Update();
-                Game.Player.JobTransport?.Update();
-                Game.Player.AbilityPet?.Update();
-                Game.Player.Growth?.Update();
-                Game.Player.Fellow?.Update();
+                var elapsed = TickCount - lastUpdate;
 
-                SpawnManager.Update();
+                Game.Player.Update(elapsed);
+                Game.Player.Transport?.Update(elapsed);
+                Game.Player.JobTransport?.Update(elapsed);
+                Game.Player.AbilityPet?.Update(elapsed);
+                Game.Player.Growth?.Update(elapsed);
+                Game.Player.Fellow?.Update(elapsed);
+
+                SpawnManager.Update(elapsed);
+
+                // Collision stuffs
+                var currentRegionId = Game.Player.Movement.Source.RegionId;
+                if (CollisionManager.CenterRegionId != currentRegionId)
+                {
+                    Game.NearbyTeleporters = Game.ReferenceManager.GetTeleporters(currentRegionId);
+                    Log.Debug($"Found teleporters: {Game.NearbyTeleporters.Length}");
+                    CollisionManager.Update(currentRegionId);
+                }
+
                 EventManager.FireEvent("OnTick");
+
+                lastUpdate = TickCount;
             }
         }
 

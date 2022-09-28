@@ -1,9 +1,7 @@
 ﻿using RSBot.Core;
 using RSBot.Core.Components;
-using RSBot.Core.Objects;
+using RSBot.Core.Event;
 using RSBot.Core.Objects.Spawn;
-using System;
-using System.Linq;
 
 namespace RSBot.Default.Bundle.Movement
 {
@@ -16,11 +14,6 @@ namespace RSBot.Default.Bundle.Movement
         /// The configuration.
         /// </value>
         public MovementConfig Config { get; set; }
-
-        /// <summary>
-        /// The random
-        /// </summary>
-        private Random _random;
 
         /// <summary>
         /// Gets or sets a value indicating whether [last entity was behind obstacle].
@@ -39,36 +32,31 @@ namespace RSBot.Default.Bundle.Movement
             if (Game.SelectedEntity != null && !LastEntityWasBehindObstacle)
                 return;
 
-            var playerUnderAttack = SpawnManager.Any<SpawnedMonster>(m => m.AttackingPlayer &&
-               m.Movement.Source.DistanceTo(Container.Bot.Area.CenterPosition) < Container.Bot.Area.Radius);
+            var playerUnderAttack = SpawnManager.Any<SpawnedMonster>(m => m.AttackingPlayer && Container.Bot.Area.IsInSight(m));
             if (playerUnderAttack && !LastEntityWasBehindObstacle)
                 return;
 
             if (Game.Player.Movement.Moving)
                 return;
 
-            var distance = Game.Player.Movement.Source.DistanceTo(Container.Bot.Area.CenterPosition);
-            var hasCollision = CollisionManager.HasCollisionBetween(Game.Player.Movement.Source, Container.Bot.Area.CenterPosition);
+            var distance = Game.Player.Movement.Source.DistanceTo(Container.Bot.Area.Position);
+            var hasCollision = CollisionManager.HasCollisionBetween(Game.Player.Movement.Source, Container.Bot.Area.Position);
 
             //Go back if the player is out of the radius
             if ((distance > Container.Bot.Area.Radius || (Config.WalkToCenter && distance > 10)) && !hasCollision)
-                Game.Player.MoveTo(Container.Bot.Area.CenterPosition);
+            {
+                EventManager.FireEvent("OnChangeStatusText", "Walking to center");
+                Game.Player.MoveTo(Container.Bot.Area.Position);
 
-            if (!Config.WalkAround)
+                return;
+            }
+
+            if (Config.WalkToCenter)
                 return;
 
-            var randomRadius = Container.Bot.Area.Radius;
-            if (randomRadius > 100)
-                randomRadius = 100;
+            EventManager.FireEvent("OnChangeStatusText", "Walking around");
 
-            RunInWorld(randomRadius);
-        }
-
-        private void RunInWorld(int randomRadius)
-        {
-            var destination = Container.Bot.Area.CenterPosition;
-            destination.XCoordinate += _random.Next(-randomRadius, randomRadius);
-            destination.YCoordinate += _random.Next(-randomRadius, randomRadius);
+            var destination = Container.Bot.Area.GetRandomPosition();
             if (!CollisionManager.HasCollisionBetween(Game.Player.Movement.Source, destination))
                 Game.Player.MoveTo(destination, false);
         }
@@ -83,8 +71,6 @@ namespace RSBot.Default.Bundle.Movement
                 WalkAround = PlayerConfig.Get<bool>("RSBot.Area.WalkAround"),
                 WalkToCenter = PlayerConfig.Get<bool>("RSBot.Area.GoToCenter", true)
             };
-
-            _random = new Random();
         }
 
         public void Stop()

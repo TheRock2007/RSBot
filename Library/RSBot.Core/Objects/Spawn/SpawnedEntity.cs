@@ -35,7 +35,7 @@ namespace RSBot.Core.Objects.Spawn
         /// <value>
         /// The state.
         /// </value>
-        public State State { get; } = new State();
+        public State State { get; } = new();
 
         /// <summary>
         /// Gets the record.
@@ -67,6 +67,14 @@ namespace RSBot.Core.Objects.Spawn
         public Movement Movement;
 
         /// <summary>
+        /// Gets the position.
+        /// </summary>
+        /// <value>
+        /// The position.
+        /// </value>
+        public Position Position => Movement.Source;
+
+        /// <summary>
         /// Gets a value indicating whether [in cave].
         /// </summary>
         /// <value>
@@ -80,27 +88,15 @@ namespace RSBot.Core.Objects.Spawn
         /// <value>
         /// <c>true</c> if this instance is behind obstacle; otherwise, <c>false</c>.
         /// </value>
-        public bool IsBehindObstacle => CollisionManager.HasCollisionBetween(Movement.Source, Game.Player.Movement.Source);
+        public bool IsBehindObstacle => CollisionManager.HasCollisionBetween(Game.Player.Position, Position);
 
         /// <summary>
         /// Entity current speed
         /// </summary>
         public float ActualSpeed => Movement.Type == MovementType.Walking ? State.WalkSpeed : State.RunSpeed;
 
-        /// <summary>
-        /// The Update timer.
-        /// </summary>
-        private Timer _timer;
-
-        /// <summary>
-        /// The Stopwatch.
-        /// </summary>
-        private Stopwatch _stopwatch { get; } = new Stopwatch();
-
         public void SetMovement(Movement movement)
         {
-            _timer = new Timer();
-            _timer.Elapsed += CurrentTimer_Elapsed;
             Movement = movement;
             SetAngle(movement.Angle);
 
@@ -108,47 +104,12 @@ namespace RSBot.Core.Objects.Spawn
                 Move(movement.Destination);
         }
 
-        private void CurrentTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            lock (_lock)
-            {
-                _stopwatch.Stop();
-                double? remaining = null;
-
-                if (Movement.HasDestination)
-                    remaining = Math.Sqrt(Math.Pow(Movement.Destination.WorldXOffset - Movement.Source.WorldXOffset, 2) + Math.Pow(Movement.Destination.WorldYOffset - Movement.Source.WorldYOffset, 2));
-
-                var speed = ActualSpeed;
-
-                var finish = false;
-                var totalChange = speed / 1000.0 * _stopwatch.ElapsedMilliseconds;
-                if (remaining != null && totalChange > remaining)
-                {
-                    totalChange = remaining.Value;
-                    finish = true;
-                }
-
-                Movement.Source.WorldXOffset += (float)(Math.Cos(Movement.Angle) * totalChange);
-                Movement.Source.WorldYOffset += (float)(Math.Sin(Movement.Angle) * totalChange);
-
-                if (finish)
-                    StopMoving();
-
-                _stopwatch.Restart();
-            }
-        }
-
-        public void Move(double angle)
+        public void Move(float angle)
         {
             lock (_lock)
             {
                 Movement.HasDestination = false;
                 SetAngle(angle);
-
-                _stopwatch.Restart();
-
-                if (Movement.Moving == false)
-                    _timer.Start();
 
                 Movement.Moving = true;
             }
@@ -161,14 +122,12 @@ namespace RSBot.Core.Objects.Spawn
                 Movement.HasDestination = true;
                 Movement.Destination = destination;
 
-                var xDelta = Movement.Destination.WorldXOffset - Movement.Source.WorldXOffset;
-                var yDelta = Movement.Destination.WorldYOffset - Movement.Source.WorldYOffset;
+                var xDelta = Movement.Destination.X - Movement.Source.X;
+                var yDelta = Movement.Destination.Y - Movement.Source.Y;
 
-                Movement.Angle = Math.Atan2(yDelta, xDelta);
-                _stopwatch.Restart();
+                Movement.Angle = MathF.Atan2(yDelta, xDelta);
 
-                if (Movement.Moving == false)
-                    _timer.Start();
+                CalculateMovingConditional();
 
                 Movement.Moving = true;
             }
@@ -186,26 +145,17 @@ namespace RSBot.Core.Objects.Spawn
             //SetAngle(source.Angle);
 
             if (Movement.Moving)
-            {
-                _stopwatch.Reset();
-                _stopwatch.Start();
-            }
+                CalculateMovingConditional();
         }
 
-        internal void SetAngle(double angle)
+        internal void SetAngle(float angle)
         {
-            Movement.Angle = angle * Math.PI / short.MaxValue;
-        }
-
-        public void StopTimer()
-        {
-            _timer.Stop();
+            Movement.Angle = angle * MathF.PI / short.MaxValue;
         }
 
         public void StopMoving()
         {
-            StopTimer();
-            _stopwatch.Stop();
+            Movement.RemainingTime = TimeSpan.Zero;
             Movement.Moving = false;
             Movement.HasDestination = false;
         }
@@ -216,16 +166,80 @@ namespace RSBot.Core.Objects.Spawn
             lock (_lock)
             {
                 Movement.Source = pos;
-                SetAngle(pos.Angle);
             }
+        }
+
+        private void CalculateMovingConditional()
+        {
+            var position = this.Movement.Source;
+            var diffX = Movement.Destination.X - position.X;
+            var diffY = Movement.Destination.Y - position.Y;
+            var distance = Movement.Destination.DistanceTo(position);
+
+            var speed = ActualSpeed * 0.1f;
+
+            // Don't move if too close to destination
+            if (distance <= 1)
+                return;
+
+            // Calculate movement and move time
+            var remaining = TimeSpan.FromSeconds(distance / speed);
+            Movement.MovingX = diffX / remaining.TotalSeconds;
+            Movement.MovingY = diffY / remaining.TotalSeconds;
+            Movement.RemainingTime = remaining;
+        }
+
+        private void CheckMovement(int delta)
+        {
+            if (!Movement.Moving)
+                return;
+
+            if (Movement.HasDestination)
+            {
+                var elapsed = TimeSpan.FromMilliseconds(delta);
+
+                if ((Movement.RemainingTime -= elapsed) <= TimeSpan.Zero)
+                {
+                    StopMoving(Movement.Destination);
+                    Movement.RemainingTime = TimeSpan.Zero;
+                }
+                // If there's still move time left, update the current position.
+                else
+                {
+                    Movement.Source.XOffset += (float)(Movement.MovingX * 10 * elapsed.TotalSeconds);
+                    Movement.Source.YOffset += (float)(Movement.MovingY * 10 * elapsed.TotalSeconds);
+                }
+
+                return;
+            }
+
+            float remaning = -1f;
+
+            var finish = false;
+            var totalChange = ActualSpeed / 1000.0f * delta;
+            if (remaning != -1 && totalChange > remaning)
+            {
+                totalChange = remaning;
+                finish = true;
+            }
+
+            var dir = MathF.SinCos(Movement.Angle);
+
+            Movement.Source.XOffset += dir.Cos * totalChange;
+            Movement.Source.YOffset += dir.Sin * totalChange;
+
+            if (finish)
+                StopMoving(Movement.Destination);
         }
 
         /// <summary>
         /// Update the instance
         /// </summary>
         /// <returns></returns>
-        public virtual bool Update()
+        public virtual bool Update(int delta)
         {
+            CheckMovement(delta);
+
             return true;
         }
 

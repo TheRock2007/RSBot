@@ -7,7 +7,6 @@ using RSBot.Views.Dialog;
 using SDUI;
 using SDUI.Controls;
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,10 +16,16 @@ namespace RSBot.Views
 {
     public partial class Main : CleanForm
     {
+        #region Members
+
         /// <summary>
         /// Bot player name [_cached]
         /// </summary>
         private string _playerName;
+
+        #endregion Members
+
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Main"/> class.
@@ -32,6 +37,10 @@ namespace RSBot.Views
             CheckForIllegalCrossThreadCalls = false;
             RegisterEvents();
         }
+
+        #endregion Constructor
+
+        #region Methods
 
         /// <summary>
         /// Refreshes the theme.
@@ -63,22 +72,23 @@ namespace RSBot.Views
         /// Selects the botbase.
         /// </summary>
         /// <param name="index">The index.</param>
-        private void SelectBotbase(int index)
+        private void SelectBotbase(string name)
         {
             if (Kernel.Bot.Running)
                 return;
 
-            if (menuBotbase.DropDownItems.Count <= index) return;
+            var botbase = Kernel.BotbaseManager.Bots.FirstOrDefault(bot => bot.Value.Info.Name == name);
 
-            var selectedBotbase = Kernel.BotbaseManager.Bots.ElementAt(index).Value;
-            if (selectedBotbase == null)
+            if (botbase.Value == null)
+            {
+                Log.Error($"Botbase [{name}] could not be found!");
                 return;
+            }
+
+            var selectedBotbase = botbase.Value;
 
             selectedBotbase.Translate();
 
-            menuBotbase.Text = selectedBotbase.Info.DisplayName;
-            menuBotbase.Image = selectedBotbase.Info.Image;
-            menuBotbase.Tag = selectedBotbase;
             _ = tabMain.Handle; //Generate the handle for the tab control
 
             if (Kernel.Bot?.Botbase != null)
@@ -98,7 +108,7 @@ namespace RSBot.Views
             tabMain.TabPages.Insert(1, tabPage);
 
             Kernel.Bot?.SetBotbase(selectedBotbase);
-            GlobalConfig.Set("RSBot.BotIndex", index.ToString());
+            GlobalConfig.Set("RSBot.BotName", selectedBotbase.Info.Name);
 
             if (Game.Player == null)
             {
@@ -114,6 +124,9 @@ namespace RSBot.Views
                 //control.BringToFront();
                 info.BringToFront();
             }
+
+            foreach (ToolStripMenuItem item in botsToolStripMenuItem.DropDown.Items)
+                item.Checked = selectedBotbase.Info.Name == item.Name;
         }
 
         /// <summary>
@@ -222,6 +235,10 @@ namespace RSBot.Views
 
             GlobalConfig.Set("RSBot.GatewayIndex", comboServer.SelectedIndex.ToString());
         }
+
+        #endregion Methods
+
+        #region Form events
 
         /// <summary>
         /// Handles the Click event of the MenuItem control.
@@ -362,6 +379,9 @@ namespace RSBot.Views
             {
                 botbase.Value.Translate();
 
+                if (!tabMain.TabPages.ContainsKey(botbase.Key))
+                    continue;
+
                 var tabpage = tabMain.TabPages[botbase.Key];
                 tabpage.Text = LanguageManager.GetLangBySpecificKey(botbase.Key, "DisplayName");
             }
@@ -413,27 +433,6 @@ namespace RSBot.Views
         }
 
         /// <summary>
-        /// Handles the Click event of the BotbaseItem control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private void BotbaseItem_Click(object sender, EventArgs e)
-        {
-            var index = (int)((ToolStripMenuItem)sender).Tag;
-            SelectBotbase(index);
-        }
-
-        /// <summary>
-        /// Handles the Click event of the picLogo control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private void picLogo_Click(object sender, EventArgs e)
-        {
-            Process.Start("https://github.com/sdclowen/rsbot");
-        }
-
-        /// <summary>
         /// Handles the FormClosing event of the Main control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
@@ -463,6 +462,190 @@ namespace RSBot.Views
         }
 
         /// <summary>
+        /// Handles the Click event of the notifyIcon control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void notifyIcon_Click(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Normal)
+                return;
+
+            /*notifyIcon.Visible = true;
+            notifyIcon.ShowBalloonTip(1000, "RSBot", "RSBot visible mode", ToolTipIcon.Info);*/
+
+            Show();
+            WindowState = FormWindowState.Normal;
+        }
+
+        /// <summary>
+        /// Handles the Click event of the menuItemExit control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void menuItemExit_Click(object sender, EventArgs e)
+        {
+            Environment.Exit(0);
+        }
+
+        /// <summary>
+        /// Handles the Resize event of the Main control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void Main_Resize(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Normal)
+                return;
+
+            if (!GlobalConfig.Get<bool>("RSBot.General.TrayWhenMinimize"))
+                return;
+
+            notifyIcon.Visible = true;
+            notifyIcon.ShowBalloonTip(1000);
+
+            Hide();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the menuItemThis control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void menuItemThis_Click(object sender, EventArgs e)
+        {
+            new About().ShowDialog();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the closeToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the minimizeToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void minimizeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Minimized;
+        }
+
+        /// <summary>
+        /// Handles the MouseDown event of the menuStrip control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="MouseEventArgs"/> instance containing the event data.</param>
+        private void menuStrip_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+            }
+        }
+
+        /// <summary>
+        /// Handles the Click event of the darkToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void darkToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("SDUI.Color", Color.Black.ToArgb());
+            ColorScheme.BackColor = Color.Black;
+
+            RefreshTheme();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the lightToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void lightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("SDUI.Color", Color.White.ToArgb());
+            ColorScheme.BackColor = Color.White;
+
+            RefreshTheme();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the coloredToolStripMenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void coloredToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var colorDialog = new ColorDialog();
+            var customColors = GlobalConfig.GetArray<int>("SDUI.CustomColors");
+            colorDialog.CustomColors = customColors;
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                GlobalConfig.Set("SDUI.Color", colorDialog.Color.ToArgb());
+                GlobalConfig.SetArray("SDUI.CustomColors", colorDialog.CustomColors);
+                ColorScheme.BackColor = colorDialog.Color;
+                BackColor = ColorScheme.BackColor;
+
+                RefreshTheme();
+            }
+        }
+
+        /// <summary>
+        /// Handles the Click event of the menuSelectProfile control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void menuSelectProfile_Click(object sender, EventArgs e)
+        {
+            var dialog = new ProfileSelectionDialog();
+            dialog.StartPosition = FormStartPosition.CenterParent;
+            dialog.ShowInTaskbar = false;
+            if (dialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            if (dialog.SelectedProfile == ProfileManager.SelectedProfile)
+                return;
+
+            var oldSroPath = GlobalConfig.Get("RSBot.SilkroadDirectory", "");
+
+            //We need this to check if the sro directories are different
+            var tempNewConfig = new Config(ProfileManager.GetProfileFile(dialog.SelectedProfile));
+
+            if (oldSroPath != tempNewConfig.Get("RSBot.SilkroadDirectory", ""))
+            {
+                if (MessageBox.Show("This profile references to a different client, do you want to restart the bot?", "Restart bot?", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
+                    Application.Restart();
+            }
+
+            ProfileManager.SetSelectedProfile(dialog.SelectedProfile);
+            GlobalConfig.Load();
+
+            EventManager.FireEvent("OnProfileChanged");
+            menuCurrentProfile.Text = dialog.SelectedProfile;
+
+            if (Game.Player == null)
+                return;
+
+            //Reload player config
+            PlayerConfig.Load(Game.Player.Name);
+
+            //A little hack to tell all plugins to reload their UI
+            EventManager.FireEvent("OnLoadCharacter");
+        }
+
+        #endregion Form events
+
+        #region Core events
+
+        /// <summary>
         /// Called when [start bot].
         /// </summary>
         private void OnStartBot()
@@ -478,6 +661,9 @@ namespace RSBot.Views
             btnStartStop.Text = LanguageManager.GetLang("StartBot");
         }
 
+        /// <summary>
+        /// Called when [load botbases].
+        /// </summary>
         private void OnLoadBotbases()
         {
             if (Kernel.BotbaseManager.Bots == null || Kernel.BotbaseManager.Bots.Count == 0)
@@ -491,20 +677,31 @@ namespace RSBot.Views
                 else if (messageResult == DialogResult.Abort)
                     Environment.Exit(-1);
             }
-            var index = 0;
-            foreach (var item in Kernel.BotbaseManager.Bots.Select(botbase => new ToolStripMenuItem
+
+            foreach (var bot in Kernel.BotbaseManager.Bots)
             {
-                Tag = index,
-                Text = botbase.Value.Info.DisplayName,
-                Image = botbase.Value.Info.Image
-            }))
-            {
-                item.Click += BotbaseItem_Click;
-                menuBotbase.DropDownItems.Add(item);
-                index++;
+                var item = new ToolStripMenuItem
+                {
+                    Name = bot.Value.Info.Name,
+                    Text = bot.Value.Info.DisplayName,
+                };
+                item.Click += Item_Click;
+                botsToolStripMenuItem.DropDown.Items.Add(item);
             }
 
-            SelectBotbase(GlobalConfig.Get<int>("RSBot.BotIndex"));
+            SelectBotbase(GlobalConfig.Get("RSBot.BotName", "RSBot.Default"));
+        }
+
+        /// <summary>
+        /// Handles the Click event of the MenuItem control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        /// <exception cref="System.NotImplementedException"></exception>
+        private void Item_Click(object? sender, EventArgs e)
+        {
+            var item = sender as ToolStripMenuItem;
+            SelectBotbase(item.Name);
         }
 
         /// <summary>
@@ -529,16 +726,27 @@ namespace RSBot.Views
             }
         }
 
+        /// <summary>
+        /// Called when [change status text].
+        /// </summary>
+        /// <param name="text">The text.</param>
         private void OnChangeStatusText(string text)
         {
             lblIngameStatus.Text = text;
         }
 
+        /// <summary>
+        /// Called when [load plugins].
+        /// </summary>
         private void OnLoadPlugins()
         {
             LoadExtensions();
         }
 
+        /// <summary>
+        /// Called when [load division information].
+        /// </summary>
+        /// <param name="info">The information.</param>
         private void OnLoadDivisionInfo(DivisionInfo info)
         {
             comboDivision.Items.Clear();
@@ -554,7 +762,7 @@ namespace RSBot.Views
         }
 
         /// <summary>
-        /// Cores the on enter game.
+        /// Called when [load character].
         /// </summary>
         private void OnLoadCharacter()
         {
@@ -574,132 +782,11 @@ namespace RSBot.Views
 
             if (Game.Clientless)
                 Text += " [Clientless]";
+
+            if (GlobalConfig.Get("RSBot.DebugEnvironment", false))
+                Text += $@" [JID = {Game.Player.JID}]";
         }
 
-        private void notifyIcon_Click(object sender, EventArgs e)
-        {
-            if (WindowState == FormWindowState.Normal)
-                return;
-
-            /*notifyIcon.Visible = true;
-            notifyIcon.ShowBalloonTip(1000, "RSBot", "RSBot visible mode", ToolTipIcon.Info);*/
-
-            Show();
-            WindowState = FormWindowState.Normal;
-        }
-
-        private void menuItemExit_Click(object sender, EventArgs e)
-        {
-            Environment.Exit(0);
-        }
-
-        private void Main_Resize(object sender, EventArgs e)
-        {
-            if (WindowState == FormWindowState.Normal)
-                return;
-
-            if (!GlobalConfig.Get<bool>("RSBot.General.TrayWhenMinimize"))
-                return;
-
-            notifyIcon.Visible = true;
-            notifyIcon.ShowBalloonTip(1000);
-
-            Hide();
-        }
-
-        private void menuItemThis_Click(object sender, EventArgs e)
-        {
-            new About().ShowDialog();
-        }
-
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void minimizeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            WindowState = FormWindowState.Minimized;
-        }
-
-        private void menuStrip_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-            }
-        }
-
-        private void darkToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            GlobalConfig.Set("SDUI.Color", Color.Black.ToArgb());
-            ColorScheme.BackColor = Color.Black;
-
-            RefreshTheme();
-        }
-
-        private void lightToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            GlobalConfig.Set("SDUI.Color", Color.White.ToArgb());
-            ColorScheme.BackColor = Color.White;
-
-            RefreshTheme();
-        }
-
-        private void coloredToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            var colorDialog = new ColorDialog();
-            var customColors = GlobalConfig.GetArray<int>("SDUI.CustomColors");
-            colorDialog.CustomColors = customColors;
-            if (colorDialog.ShowDialog() == DialogResult.OK)
-            {
-                GlobalConfig.Set("SDUI.Color", colorDialog.Color.ToArgb());
-                GlobalConfig.SetArray("SDUI.CustomColors", colorDialog.CustomColors);
-                ColorScheme.BackColor = colorDialog.Color;
-                BackColor = ColorScheme.BackColor;
-
-                RefreshTheme();
-            }
-        }
-
-        private void menuSelectProfile_Click(object sender, EventArgs e)
-        {
-            var dialog = new ProfileSelectionDialog();
-            dialog.StartPosition = FormStartPosition.CenterParent;
-            dialog.ShowInTaskbar = false;
-            if (dialog.ShowDialog() != DialogResult.OK)
-                return;
-
-            if (dialog.SelectedProfile == ProfileManager.SelectedProfile)
-                return;
-
-            var oldSroPath = GlobalConfig.Get("RSBot.SilkroadDirectory", "");
-
-            //We need this to check if the sro directories are different
-            var tempNewConfig = new Config(ProfileManager.GetProfileFile(dialog.SelectedProfile));
-
-            if (oldSroPath != tempNewConfig.Get("RSBot.SilkroadDirectory", ""))
-            {
-                if (MessageBox.Show("This profile references to a different client, do you want to restart the bot?", "Restart bot?", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
-                    Application.Restart();
-
-            }
-
-            ProfileManager.SetSelectedProfile(dialog.SelectedProfile);
-            GlobalConfig.Load();
-
-            EventManager.FireEvent("OnProfileChanged");
-            menuCurrentProfile.Text = dialog.SelectedProfile;
-
-            if (Game.Player == null)
-                return;
-
-            //Reload player config
-            PlayerConfig.Load(Game.Player.Name);
-
-            //A little hack to tell all plugins to reload their UI
-            EventManager.FireEvent("OnLoadCharacter");
-        }
+        #endregion Core events
     }
 }

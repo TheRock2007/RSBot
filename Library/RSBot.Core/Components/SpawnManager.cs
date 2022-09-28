@@ -221,6 +221,13 @@ namespace RSBot.Core.Components
 
                 var obj = Game.ReferenceManager.GetRefObjCommon(refObjId);
 
+                if (obj == null)
+                {
+                    Log.Debug($"SpawnManager::Parse error while getting RefObjCommon by id {refObjId}");
+
+                    return;
+                }
+
                 switch (obj.TypeID1)
                 {
                     case 1:
@@ -316,12 +323,12 @@ namespace RSBot.Core.Components
         /// <summary>
         /// Update the instance
         /// </summary>
-        public static void Update()
+        public static void Update(int delta)
         {
             lock (_lock)
             {
                 foreach (var entity in _entities)
-                    entity.Update();
+                    entity.Update(delta);
             }
         }
 
