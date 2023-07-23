@@ -3,7 +3,6 @@ using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -12,6 +11,8 @@ namespace RSBot.Default.Views
     [System.ComponentModel.ToolboxItem(false)]
     public partial class Main : UserControl
     {
+        private const int ScriptRecorderOwnerId = 2000;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Main"/> class.
         /// </summary>
@@ -29,6 +30,7 @@ namespace RSBot.Default.Views
             lvAvoidance.Items[6].Tag = MonsterRarity.Unique | MonsterRarity.Unique2;
             lvAvoidance.Items[7].Tag = MonsterRarity.EliteStrong;
             lvAvoidance.Items[8].Tag = MonsterRarity.Elite;
+            lvAvoidance.Items[9].Tag = MonsterRarity.Event;
         }
 
         /// <summary>
@@ -38,6 +40,24 @@ namespace RSBot.Default.Views
         {
             EventManager.SubscribeEvent("OnLoadCharacter", OnLoadCharacter);
             EventManager.SubscribeEvent("OnSetTrainingArea", OnSetTrainingArea);
+            EventManager.SubscribeEvent("OnSaveScript", new Action<int, string>(OnSaveScript));
+        }
+
+        /// <summary>
+        /// Called when the script recorder saves a script.
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <param name="path"></param>
+        private void OnSaveScript(int ownerId, string path)
+        {
+            if (IsDisposed || Disposing)
+                return;
+
+            if (ownerId != ScriptRecorderOwnerId)
+                return;
+
+            txtWalkscript.Text = path;
+            PlayerConfig.Set("RSBot.Walkback.File", txtWalkscript.Text);
         }
 
         /// <summary>
@@ -45,15 +65,16 @@ namespace RSBot.Default.Views
         /// </summary>
         private void OnSetTrainingArea()
         {
-            var xPos = PlayerConfig.Get<float>("RSBot.Area.X");
-            var yPos = PlayerConfig.Get<float>("RSBot.Area.Y");
-            var radius = PlayerConfig.Get<int>("RSBot.Area.Radius");
+            if (IsDisposed || Disposing)
+                return;
 
-            txtRadius.Text = radius.ToString();
-            txtXCoord.Text = xPos.ToString();
-            txtYCoord.Text = yPos.ToString();
+            var area = Kernel.Bot.Botbase.Area;
 
-            EventManager.FireEvent("AppendScriptCommand", $"area {xPos} {yPos} {radius}");
+            txtXCoord.Text = area.Position.X.ToString("0.0");
+            txtYCoord.Text = area.Position.Y.ToString("0.0");
+            txtRadius.Text = area.Radius.ToString();
+
+            EventManager.FireEvent("AppendScriptCommand", area.GetScriptLine());
         }
 
         /// <summary>
@@ -80,19 +101,20 @@ namespace RSBot.Default.Views
         /// </summary>
         private void LoadAvoidance()
         {
-            var avoid = PlayerConfig.GetEnums<MonsterRarity>("RSBot.Avoidance.Avoid")
-                .ToDictionary(p => "Avoid", p => p);
-            var prefer = PlayerConfig.GetEnums<MonsterRarity>("RSBot.Avoidance.Prefer")
-                .ToDictionary(p => "Prefer", p => p);
-            
-            foreach (var item in avoid.Union(prefer))
-            {
-                var listViewItem = lvAvoidance.Items.Cast<ListViewItem>()
-                    .FirstOrDefault(p => ((MonsterRarity)p.Tag & item.Value) == item.Value);
-                if (listViewItem == null)
-                    continue;
+            var prefer = PlayerConfig.GetEnums<MonsterRarity>("RSBot.Avoidance.Prefer").ToLookup(p => "Prefer", p => p);
+            var avoid = PlayerConfig.GetEnums<MonsterRarity>("RSBot.Avoidance.Avoid").ToLookup(p => "Avoid", p => p);
 
-                listViewItem.Group = lvAvoidance.Groups[$"grp{item.Key}"];
+            foreach (var group in avoid.Union(prefer))
+            {
+                foreach (var item in group)
+                {
+                    var listViewItem = lvAvoidance.Items.Cast<ListViewItem>()
+                        .FirstOrDefault(p => ((MonsterRarity)p.Tag & item) == item);
+                    if (listViewItem == null)
+                        continue;
+
+                    listViewItem.Group = lvAvoidance.Groups[$"grp{group.Key}"];
+                }
             }
         }
 
@@ -103,8 +125,12 @@ namespace RSBot.Default.Views
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void btnGetCurrent_Click(object sender, EventArgs e)
         {
-            txtXCoord.Text = Game.Player.Position.X.ToString("0.0");
-            txtYCoord.Text = Game.Player.Position.Y.ToString("0.0");
+            var pos = Game.Player.Position;
+
+            PlayerConfig.Set("RSBot.Area.Region", pos.Region);
+            PlayerConfig.Set("RSBot.Area.X", pos.XOffset);
+            PlayerConfig.Set("RSBot.Area.Y", pos.YOffset);
+            PlayerConfig.Set("RSBot.Area.Z", pos.ZOffset);
 
             EventManager.FireEvent("OnSetTrainingArea");
         }
@@ -118,8 +144,6 @@ namespace RSBot.Default.Views
         {
             if (!float.TryParse(txtXCoord.Text, out var result))
                 return;
-
-            PlayerConfig.Set("RSBot.Area.X", result);
         }
 
         /// <summary>
@@ -131,8 +155,6 @@ namespace RSBot.Default.Views
         {
             if (!float.TryParse(txtYCoord.Text, out var result))
                 return;
-
-            PlayerConfig.Set("RSBot.Area.Y", result);
         }
 
         /// <summary>
@@ -157,7 +179,7 @@ namespace RSBot.Default.Views
         {
             var diag = new OpenFileDialog
             {
-                Filter = @"RSBot Bot script|*.rbs",
+                Filter = @"RSBot Bot script (*.rbs)|*.rbs",
                 Title = @"Browse for a walkback script"
             };
 
@@ -234,7 +256,7 @@ namespace RSBot.Default.Views
         /// <param name="e">The <see cref="System.EventArgs" /> instance containing the event data.</param>
         private void btnAvoid_Click(object sender, EventArgs e)
         {
-            if (lvAvoidance.SelectedItems.Count <= 0) 
+            if (lvAvoidance.SelectedItems.Count <= 0)
                 return;
 
             foreach (ListViewItem item in lvAvoidance.SelectedItems)
@@ -315,10 +337,15 @@ namespace RSBot.Default.Views
         /// </summary>
         private void OnLoadCharacter()
         {
+            if (IsDisposed || Disposing)
+                return;
+
+            var area = Kernel.Bot.Botbase.Area;
             //Training Area
-            txtXCoord.Text = PlayerConfig.Get("RSBot.Area.X", "0");
-            txtYCoord.Text = PlayerConfig.Get("RSBot.Area.Y", "0");
-            txtRadius.Text = PlayerConfig.Get("RSBot.Area.Radius", "50");
+            txtXCoord.Text = area.Position.X.ToString("0.0");
+            txtYCoord.Text = area.Position.Y.ToString("0.0");
+            txtRadius.Text = area.Radius.ToString();
+
             radioCenter.Checked = PlayerConfig.Get("RSBot.Area.GoToCenter", true);
             radioWalkAround.Checked = PlayerConfig.Get<bool>("RSBot.Area.WalkAround");
 
@@ -336,6 +363,7 @@ namespace RSBot.Default.Views
             numBerzerkMonsterAmount.Value = PlayerConfig.Get("RSBot.Berzerk.MonsterAmountNumber", 3);
 
             checkBoxDimensionPillar.Checked = PlayerConfig.Get<bool>("RSBot.Ignores.DimensionPillar");
+            checkAttackWeakerFirst.Checked = PlayerConfig.Get<bool>("RSBot.Advanced.AttackWeakerMobsFirst");
 
             //Avoidance
             LoadAvoidance();
@@ -351,6 +379,21 @@ namespace RSBot.Default.Views
         private void checkBoxIgnorePillars_CheckedChanged(object sender, EventArgs e)
         {
             PlayerConfig.Set("RSBot.Ignores.DimensionPillar", checkBoxDimensionPillar.Checked);
+        }
+
+        private void checkAttackWeakerFirst_CheckedChanged(object sender, EventArgs e)
+        {
+            PlayerConfig.Set("RSBot.Advanced.AttackWeakerMobsFirst", checkAttackWeakerFirst.Checked);
+        }
+
+        private void linkAttackWeakerMobsHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            MessageBox.Show("If the player is under attack by a monster that is set to be avoided the bot will counter attack weaker mobs that are currently attacking the player first before targeting the avoided monster again. The bot will only kill weaker monsters that are attacking the player and won't start to pull new mobs to the battle.", "Attack weaker mobs first", MessageBoxButtons.OK, MessageBoxIcon.Question);
+        }
+
+        private void linkRecord_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            EventManager.FireEvent("OnShowScriptRecorder", ScriptRecorderOwnerId, true);
         }
     }
 }

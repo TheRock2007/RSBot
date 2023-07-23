@@ -8,7 +8,7 @@ using System.Linq;
 using System.Timers;
 using System.Windows.Forms;
 
-namespace RSBot.Statistics.Views 
+namespace RSBot.Statistics.Views
 {
     [System.ComponentModel.ToolboxItem(false)]
     public partial class Main : UserControl
@@ -68,7 +68,7 @@ namespace RSBot.Statistics.Views
             var calculators = CalculatorRegistry.Calculators;
             calculators.Reverse();
 
-            this.Invoke(new Action(() =>
+            this.Invoke(new(() =>
             {
                 foreach (var calculator in calculators)
                 {
@@ -77,8 +77,6 @@ namespace RSBot.Statistics.Views
                         Dock = DockStyle.Top,
                         Text = calculator.Label,
                         Name = calculator.Name,
-                        Size = new Size(75, 25),
-                        AutoSize = false
                     };
 
                     checkBox.CheckedChanged += Filter_CheckedChanged;
@@ -106,7 +104,7 @@ namespace RSBot.Statistics.Views
 
                 var lvItem = new ListViewItem(calculator.Label) { Tag = calculator };
                 lvItem.SubItems.Add("0");
-                
+
                 switch (calculator.Group)
                 {
                     case StatisticsGroup.Player:
@@ -127,7 +125,7 @@ namespace RSBot.Statistics.Views
 
                 lvStatistics.Items.Add(lvItem);
             }
-            
+
             lvStatistics.EndUpdate();
         }
 
@@ -138,7 +136,7 @@ namespace RSBot.Statistics.Views
         {
             foreach (ListViewItem item in lvStatistics.Items)
             {
-                var calculator = (IStatisticCalculator) item?.Tag;
+                var calculator = (IStatisticCalculator)item?.Tag;
 
                 if (calculator != null)
                     item.SubItems[1].Text = string.Format(calculator.ValueFormat, calculator.GetValue());
@@ -197,11 +195,11 @@ namespace RSBot.Statistics.Views
                 calculator.Reset();
         }
 
-        private void resetToolStripMenuItem_Click( object sender, EventArgs e ) 
+        private void resetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach( ListViewItem lvItem in lvStatistics.SelectedItems ) 
+            foreach (ListViewItem lvItem in lvStatistics.SelectedItems)
             {
-                if( lvItem.Tag is IStatisticCalculator calculator )
+                if (lvItem.Tag is IStatisticCalculator calculator)
                     calculator.Reset();
             }
         }

@@ -9,48 +9,30 @@ namespace RSBot.Core.Components.Collision.Calculated;
 /// </summary>
 public class CalculatedCollisionMesh
 {
-    public ushort RegionId;
+    public Region Region;
 
-    public List<CalculatedCollisionLine> Collisions;
-
-    public CalculatedCollisionMesh(List<CalculatedCollisionLine> collisions)
-    {
-        Collisions = collisions;
-    }
+    public CalculatedCollisionLine[] Collisions;
 
     internal CalculatedCollisionMesh(RSCollisionMesh original)
     {
-        RegionId = original.RegionId;
-        Collisions = new List<CalculatedCollisionLine>(original.CollisionLines.Length);
+        Region = original.Region;
 
-        Calculate(original);
+        var collisions = original.Collisions;
+        Collisions = new CalculatedCollisionLine[collisions.Length];
+
+        Calculate(collisions);
     }
 
-    /// <summary>
-    /// Calculates the specified original.
-    /// </summary>
-    /// <param name="original">The original.</param>
-    private void Calculate(RSCollisionMesh original)
+    private void Calculate(IReadOnlyList<RSCollisionLine> collisions)
     {
-        foreach (var line in original.CollisionLines)
+        for (var iLine = 0; iLine < collisions.Count; iLine++)
         {
-            Position posSource = new()
-            {
-                XOffset = line.Source.X,
-                ZOffset = 0,
-                YOffset = line.Source.Y,
-                RegionId = original.RegionId
-            };
+            var line = collisions[iLine];
 
-            Position posDestination = new()
-            {
-                XOffset = line.Destination.X,
-                ZOffset = 0,
-                YOffset = line.Destination.Y,
-                RegionId = original.RegionId
-            };
+            var posSource = new Position(Region, line.Source.X, line.Source.Y, 0);
+            var posDestination = new Position(Region, line.Destination.X, line.Destination.Y, 0);
 
-            Collisions.Add(new CalculatedCollisionLine(posSource, posDestination));
+            Collisions[iLine] = new CalculatedCollisionLine(posSource, posDestination);
         }
     }
 }

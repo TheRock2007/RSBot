@@ -3,14 +3,16 @@ using RSBot.Core.Components;
 using RSBot.Views.Dialog;
 using SDUI;
 using SDUI.Controls;
+using SDUI.Helpers;
 using System;
 using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RSBot.Views
 {
-    public partial class SplashScreen : CleanForm
+    public partial class SplashScreen : UIWindow
     {
         private readonly Main _mainForm;
 
@@ -21,11 +23,9 @@ namespace RSBot.Views
         {
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
-            _mainForm = new Main();
+            _mainForm = new();
 
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            labelVersion.Text = $"v{version.Major}.{version.Minor}";
-
+            labelVersion.Text = Program.AssemblyVersion;
             referenceDataLoader.RunWorkerCompleted += ReferenceDataLoaderCompleted;
         }
 
@@ -43,7 +43,18 @@ namespace RSBot.Views
             }
 
             Kernel.Language = GlobalConfig.Get("RSBot.Language", "en_US");
-            ColorScheme.BackColor = Color.FromArgb(GlobalConfig.Get("SDUI.Color", Color.White.ToArgb()));
+
+            var detectDarkLight = GlobalConfig.Get("RSBot.Theme.Auto", true);
+            if (detectDarkLight)
+            {
+                if (WindowsHelper.IsDark())
+                    ColorScheme.BackColor = Main.DarkThemeColor;
+                else
+                    ColorScheme.BackColor = Main.LightThemeColor;
+            }
+            else
+                ColorScheme.BackColor = Color.FromArgb(GlobalConfig.Get("SDUI.Color", Color.White.ToArgb()));
+
             LanguageManager.Translate(_mainForm, Kernel.Language);
 
             if (!GlobalConfig.Exists("RSBot.SilkroadDirectory") || !File.Exists(GlobalConfig.Get<string>("RSBot.SilkroadDirectory") + "\\media.pk2"))
@@ -108,7 +119,7 @@ namespace RSBot.Views
         private void ReferenceDataLoaderCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
             _mainForm.Show();
-            _mainForm.RefreshTheme();
+            _mainForm.RefreshTheme(false);
 
             Hide();
         }
@@ -167,6 +178,8 @@ namespace RSBot.Views
             if (!Kernel.BotbaseManager.LoadAssemblies())
                 MessageBox.Show(@"Failed to load botbases. Process canceled!", @"Initialize Application - Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
+            CommandManager.Initialize();
+
             InitializeMap();
         }
 
@@ -176,17 +189,13 @@ namespace RSBot.Views
         private void InitializeMap()
         {
             //---- Load Map ----
-            var mapFile = Path.Combine(Environment.CurrentDirectory, "Data", "Game", "map.rsc");
-            var collisionEnabled = GlobalConfig.Get("RSBot.EnableCollisionDetection", true);
+            var mapFile = Path.Combine(Kernel.BasePath, "Data", "Game", "map.rsc");
 
-            CollisionManager.Enabled = collisionEnabled;
-
-            if (!collisionEnabled)
+            if (!CollisionManager.Enabled)
             {
                 Log.Warn("[Collision] Collision detection has been deactivated by the user!");
-
-                return;
             }
+
             if (!File.Exists(mapFile))
             {
                 Log.Error($"[Collisions] Directory {mapFile} not found!");
@@ -194,7 +203,7 @@ namespace RSBot.Views
                 return;
             }
 
-            CollisionManager.Initialize(mapFile);
+            CollisionManager.Initialize();
         }
 
         /// <summary>

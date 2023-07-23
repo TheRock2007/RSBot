@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.Timers;
-using RSBot.Core.Client.ReferenceObjects;
+﻿using RSBot.Core.Client.ReferenceObjects;
 using RSBot.Core.Components;
+using System;
 
 namespace RSBot.Core.Objects.Spawn
 {
@@ -11,7 +9,7 @@ namespace RSBot.Core.Objects.Spawn
         /// <summary>
         /// Synchroniztion object.
         /// </summary>
-        protected object _lock { get; } = new object();
+        protected internal object _lock { get; } = new();
 
         /// <summary>
         /// Gets or sets the unique identifier.
@@ -36,6 +34,11 @@ namespace RSBot.Core.Objects.Spawn
         /// The state.
         /// </value>
         public State State { get; } = new();
+
+        /// <summary>
+        /// Returns a value indicating if the entity is a mob.
+        /// </summary>
+        public bool IsMob => Record is { TypeID2: 2, TypeID3: 1 };
 
         /// <summary>
         /// Gets the record.
@@ -80,7 +83,10 @@ namespace RSBot.Core.Objects.Spawn
         /// <value>
         ///   <c>true</c> if [in cave]; otherwise, <c>false</c>.
         /// </value>
-        public bool IsInDungeon => Movement.Source.IsInDungeon;
+        public bool IsInDungeon => Movement.Source.Region.IsDungeon;
+
+        private long _lastCollisionTick;
+        private bool _lastCollisionResult;
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is behind obstacle.
@@ -88,12 +94,39 @@ namespace RSBot.Core.Objects.Spawn
         /// <value>
         /// <c>true</c> if this instance is behind obstacle; otherwise, <c>false</c>.
         /// </value>
-        public bool IsBehindObstacle => CollisionManager.HasCollisionBetween(Game.Player.Position, Position);
+        public bool IsBehindObstacle
+        {
+            get
+            {
+                //It's enough to check for collision every 1 second
+                if (Kernel.TickCount - _lastCollisionTick >= 1000)
+                {
+                    _lastCollisionTick = Kernel.TickCount;
+                    _lastCollisionResult = CollisionManager.HasCollisionBetween(Game.Player.Position, Position);
+                }
+
+                return _lastCollisionResult;
+            }
+        }
 
         /// <summary>
         /// Entity current speed
         /// </summary>
-        public float ActualSpeed => Movement.Type == MovementType.Walking ? State.WalkSpeed : State.RunSpeed;
+        public float ActualSpeed
+        {
+            get
+            {
+                if (Movement.Type == MovementType.Walking)
+                {
+                    if (State.WalkSpeed == 0 && State.RunSpeed != 0)
+                        return State.RunSpeed;
+
+                    return State.WalkSpeed;
+                }
+
+                return State.RunSpeed;
+            }
+        }
 
         public void SetMovement(Movement movement)
         {
@@ -137,6 +170,9 @@ namespace RSBot.Core.Objects.Spawn
         {
             State.WalkSpeed = walk;
             State.RunSpeed = run;
+
+            if (Movement.HasDestination && Movement.Moving)
+                CalculateMovingConditional();
         }
 
         public void SetSource(Position source)

@@ -1,50 +1,39 @@
-﻿using Accessibility;
-using RSBot.Alchemy.Bot;
-using RSBot.Alchemy.Subscriber;
-using RSBot.Alchemy.Views;
+﻿using RSBot.Alchemy.Subscriber;
 using RSBot.Core;
 using RSBot.Core.Components;
+using RSBot.Core.Objects;
 using RSBot.Core.Plugins;
-using System;
 using System.Windows.Forms;
 
 namespace RSBot.Alchemy
 {
     public class Bootstrap : IBotbase
     {
-        #region Properties
-
         private static string _name = "RSBot.Alchemy";
-        public static bool IsActive => Kernel.Bot.Running && Kernel.Bot.Botbase.Info.Name == _name;
 
-        public BotbaseInfo Info => new()
-        {
-            Name = _name,
-            DisplayName = "Alchemy",
-            TabText = "Alchemy"
-        };
+        public string Name => _name;
 
-        #endregion Properties
+        public string DisplayName => "Alchemy";
 
-        #region Methods
+        public string TabText => DisplayName;
 
-        public Control GetView()
-        {
-            return Globals.View ?? (Globals.View = new Main());
-        }
+        public Area Area => new();
+
+        public static bool IsActive => Kernel.Bot.Running && Kernel.Bot.Botbase.Name == _name;
+
+        public Control View => Globals.View;
 
         public void Initialize()
         {
             AlchemyEventsSubscriber.Subscribe();
-            Globals.Botbase = new Botbase();
+            Globals.Botbase = new();
 
             Log.AppendFormat(LogLevel.Notify, "[Alchemy] Initialized botbase");
         }
 
         public void Start()
         {
-            if (Globals.Botbase != null)
-                Globals.Botbase.Start();
+            Globals.Botbase?.Start();
 
             Log.AppendFormat(LogLevel.Debug, "[Alchemy] Starting automated alchemy...");
         }
@@ -57,6 +46,13 @@ namespace RSBot.Alchemy
             Log.AppendFormat(LogLevel.Debug, "[Alchemy] Stopped automated alchemy");
         }
 
+        public void Register()
+        {
+            Initialize();
+
+            Log.Debug("[Alchemy] Botbase registered to the kernel!");
+        }
+
         public void Tick()
         {
             if (!Globals.View.IsRefreshing && !AlchemyManager.IsFusing)
@@ -65,9 +61,7 @@ namespace RSBot.Alchemy
 
         public void Translate()
         {
-            LanguageManager.Translate(GetView(), Kernel.Language);
+            LanguageManager.Translate(View, Kernel.Language);
         }
-
-        #endregion Methods
     }
 }

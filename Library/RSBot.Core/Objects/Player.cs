@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using RSBot.Core.Components;
+using RSBot.Core.Objects.Job;
 
 namespace RSBot.Core.Objects
 {
@@ -509,6 +511,57 @@ namespace RSBot.Core.Objects
         public InventoryItem Weapon => Inventory.GetItemAt(6);
 
         /// <summary>
+        /// Gets information about the current trade job.
+        /// </summary>
+        public TradeInfo TradeInfo { get; internal set; } = null;
+
+        /// <summary>
+        /// Gets a value indicating whether this player is able to attack.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance can attack; otherwise, <c>false</c>.
+        /// </value>
+        public bool CanAttack
+        {
+            get
+            {
+                //State
+                if (State.LifeState == LifeState.Dead)
+                    return false;
+
+                if (State.ScrollState == ScrollState.NormalScroll)
+                    return false;
+
+                if (State.BodyState == BodyState.Untouchable)
+                    return false;
+
+                if (State.HitState == ActionHitStateFlag.KnockDown)
+                    return false;
+
+                if (HasActiveVehicle)
+                    return false;
+
+                if (State.MotionState == MotionState.Sitting)
+                    return false;
+
+                //Bad effects - probably there are more
+                if ((BadEffect & BadEffect.Fear) != 0)
+                    return false;
+
+                if ((BadEffect & BadEffect.Sleep) != 0)
+                    return false;
+
+                if ((BadEffect & BadEffect.Frozen) != 0)
+                    return false;
+
+                if ((BadEffect & BadEffect.Stunned) != 0)
+                    return false;
+
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the last hp potion item tick count
         /// </summary>
         public int _lastHpPotionTick;
@@ -553,6 +606,20 @@ namespace RSBot.Core.Objects
         /// </summary>
         /// <param name="objId"></param>
         public Player(uint objId) : base(objId) { }
+
+        /// <summary>
+        /// The update method
+        /// </summary>
+        /// <param name="delta">Time between previous and current run</param>
+        public override bool Update(int delta)
+        {
+            base.Update(delta);
+
+            if(HasActiveVehicle)
+                Movement = Vehicle.Movement;
+
+            return true;
+        }
 
         /// <summary>
         /// Gets the ammunition amount.
@@ -607,32 +674,30 @@ namespace RSBot.Core.Objects
             var distance = Game.Player.Movement.Source.DistanceTo(destination);
             if (distance > 150)
             {
-                Log.Warn($"Player.Move: Target position too far away! Target distance: {Math.Round(distance, 2)}");
-
-                // Stop the bot for now! NEED IDEA!
-                //Kernel.Bot.Stop();
+                Log.Debug($"Player.Move: Target position too far away! Target distance: {Math.Round(distance, 2)}");
 
                 return false;
             }
 
             if (HasActiveVehicle)
             {
-                Transport.MoveTo(destination);
+                Vehicle.MoveTo(destination, sleep);
                 return true;
             }
 
             var packet = new Packet(0x7021);
             packet.WriteByte(1);
-            packet.WriteUShort(destination.RegionId);
 
             if (!Game.Player.IsInDungeon)
             {
+                destination.Region.Serialize(packet);
                 packet.WriteShort(destination.XOffset);
                 packet.WriteShort(destination.ZOffset);
                 packet.WriteShort(destination.YOffset);
             }
             else
             {
+                Game.Player.Position.Region.Serialize(packet);
                 packet.WriteInt(destination.XOffset);
                 packet.WriteInt(destination.ZOffset);
                 packet.WriteInt(destination.YOffset);
@@ -649,7 +714,8 @@ namespace RSBot.Core.Objects
 
             if (awaitCallback.IsCompleted)
             {
-                if (!sleep) return true;
+                if (!sleep) 
+                    return true;
 
                 //Wait to finish the step
                 Thread.Sleep(Convert.ToInt32(distance / Game.Player.ActualSpeed * 10000));
@@ -665,6 +731,9 @@ namespace RSBot.Core.Objects
             lock (_lock)
             {
                 if (State.LifeState == LifeState.Dead)
+                    return false;
+
+                if (Game.SelectedEntity is SpawnedNpcNpc)
                     return false;
 
                 var potionItem = Inventory.GetItem(filter);
@@ -687,6 +756,8 @@ namespace RSBot.Core.Objects
                     {
                         duration = 4050;
                     }
+                    else
+                        Log.Debug($"Unknown poion type: {record}");
                 }
                 var elapsed = Kernel.TickCount - tick;
                
@@ -696,9 +767,14 @@ namespace RSBot.Core.Objects
                 var result = potionItem.Use();
 
                 if (result)
+                {
                     tick = Kernel.TickCount;
 
-                Log.Debug($"Potion [{potionItem.Record.GetRealName()}] used");
+                    Log.Debug($"Potion [{potionItem.Record.GetRealName()}] used");
+                }
+                else
+                    Log.Debug($"[ERROR] Potion [{potionItem.Record.GetRealName()}] used Elapsed:{elapsed} Duration:{duration} Condition:{elapsed < duration}");
+
                 return result;
             }
         }
@@ -799,14 +875,14 @@ namespace RSBot.Core.Objects
         /// <returns></returns>
         public bool SummonVehicle()
         {
-            if (HasActiveVehicle || Game.Player.State.BattleState == BattleState.InBattle)
+            if (HasActiveVehicle || Game.Player.State.BattleState == BattleState.InBattle || Game.Player.JobTransport != null)
                 return false;
 
             var typeIdFilter = new TypeIdFilter(3, 3, 3, 2);
-            var vehicleItem = Inventory.GetItem(item => typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Game.Player.Level);
+            var vehicleItem = Inventory.GetItem(item => typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Game.Player.Level && !item.Record.CodeName.Contains("COS_T"));
             if (vehicleItem == null)
                 return false;
-
+            
             return vehicleItem.Use();
         }
 
@@ -984,7 +1060,10 @@ namespace RSBot.Core.Objects
                     if (!item.HasExtraAbility(out var extraAbilityItems))
                         continue;
 
-                    abilitySkills.AddRange(extraAbilityItems.SelectMany(p => p.Skills).Select(skillId => new SkillInfo(skillId, true)));
+                    abilitySkills.AddRange(extraAbilityItems
+                        .SelectMany(p => p.Skills)
+                        .Where(p => p != 0)
+                        .Select(skillId => new SkillInfo(skillId, true)));
                 }    
             }
 

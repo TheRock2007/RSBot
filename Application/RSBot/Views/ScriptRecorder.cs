@@ -8,12 +8,13 @@ using RSBot.Views.Dialog;
 using SDUI.Controls;
 using System;
 using System.Drawing;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RSBot.Views
 {
-    public partial class ScriptRecorder : CleanForm
+    public partial class ScriptRecorder : UIWindow
     {
         private class CommandComboBoxItem
         {
@@ -29,15 +30,21 @@ namespace RSBot.Views
 
         private bool _recording;
         private bool _running;
+        private int _ownerId;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScriptRecorder"/> class.
         /// </summary>
-        public ScriptRecorder()
+        public ScriptRecorder(int ownerId = 0, bool startRecording = false)
         {
+            _ownerId = ownerId;
+
             InitializeComponent();
             SubscribeEvents();
             PopulateCommandList();
+
+            if (startRecording)
+                StartRecording();
         }
 
         /// <summary>
@@ -55,6 +62,7 @@ namespace RSBot.Views
         private void SubscribeEvents()
         {
             EventManager.SubscribeEvent("OnPlayerMove", OnPlayerMove);
+            EventManager.SubscribeEvent("OnVehicleMove", OnPlayerMove);
             EventManager.SubscribeEvent("OnRequestTeleport", new Action<uint, string>(OnRequestTeleport));
             EventManager.SubscribeEvent("OnTerminateVehicle", OnTerminateVehicle);
             EventManager.SubscribeEvent("OnTeleportComplete", OnTeleportComplete);
@@ -62,7 +70,7 @@ namespace RSBot.Views
             EventManager.SubscribeEvent("OnNpcRepairRequest", new Action<uint, byte, byte>(OnNpcRepairRequest));
             EventManager.SubscribeEvent("OnStorageOpenRequest", new Action<uint>(StorageOpenRequest));
             EventManager.SubscribeEvent("OnTalkRequest", new Action<uint, TalkOption>(OnTalkRequest));
-            EventManager.SubscribeEvent("OnFinishScript", OnFinishScript);
+            EventManager.SubscribeEvent("OnFinishScript", new Action<bool>(OnFinishScript));
             EventManager.SubscribeEvent("OnCastSkill", new Action<uint>(OnCastSkill));
 
             EventManager.SubscribeEvent("OnBuyItemRequest", new Action<byte, byte, ushort, uint>(OnBuyItemRequest));
@@ -114,7 +122,7 @@ namespace RSBot.Views
 
         #region Events
 
-        private void OnFinishScript()
+        private void OnFinishScript(bool error = false)
         {
             if (_running)
             {
@@ -177,7 +185,7 @@ namespace RSBot.Views
             if (IsDisposed)
                 return;
 
-            if (!ScriptManager.Running) 
+            if (!ScriptManager.Running)
                 return;
 
             if (txtScript.Text.Split('\n').Length >= lineNumber)
@@ -192,13 +200,23 @@ namespace RSBot.Views
             if (!_recording)
                 return;
 
-            var stepString = new System.Text.StringBuilder();
-            stepString.Append($"move {Math.Round(Game.Player.Movement.Destination.XOffset, MidpointRounding.AwayFromZero)}");
-            stepString.Append($" {Math.Round(Game.Player.Movement.Destination.YOffset, MidpointRounding.AwayFromZero)}");
-            stepString.Append($" {Math.Round(Game.Player.Movement.Destination.ZOffset, MidpointRounding.AwayFromZero)}");
-            stepString.Append($" {Game.Player.Movement.Destination.XSector}");
-            stepString.Append($" {Game.Player.Movement.Destination.YSector}");
+            SpawnedEntity entity = Game.Player;
+            if (Game.Player.HasActiveVehicle)
+                entity = Game.Player.Vehicle.Bionic;
+
+            if (!entity.Movement.HasDestination)
+                return;
+
+            var destination = entity.Movement.Destination;
+
+            StringBuilder stepString = new(); //you prefer it like this? so its not problem var stepString = new StringBuilder() same for me so np :D kk
+            stepString.Append($"move {destination.XOffset:0}");
+            stepString.Append($" {destination.YOffset:0}");
+            stepString.Append($" {destination.ZOffset:0}");
+            stepString.Append($" {destination.Region.X}");
+            stepString.Append($" {destination.Region.Y}");
             stepString.AppendLine();
+
             txtScript.AppendText(stepString.ToString());
         }
 
@@ -209,7 +227,7 @@ namespace RSBot.Views
         /// <param name="npcCodeName">Name of the NPC code.</param>
         private void OnRequestTeleport(uint destination, string npcCodeName)
         {
-            if (!_recording) 
+            if (!_recording)
                 return;
 
             txtScript.AppendText($"teleport {npcCodeName} {destination}\n");
@@ -220,7 +238,7 @@ namespace RSBot.Views
         /// </summary>
         private void OnTerminateVehicle()
         {
-            if (!_recording) 
+            if (!_recording)
                 return;
 
             txtScript.AppendText("dismount\n");
@@ -298,25 +316,30 @@ namespace RSBot.Views
                 return;
 
             if (_recording)
-            {
-                btnStartStop.Text = LanguageManager.GetLang("Start");
-                labelStatus.Text = LanguageManager.GetLang("Idle");
-                btnStartStop.Color = Color.FromArgb(33, 150, 243);
-
-                _recording = false;
-                btnRun.Enabled = true;
-            }
+                StopRecording();
             else
-            {
-                btnStartStop.Text = LanguageManager.GetLang("Stop");
-                labelStatus.Text = LanguageManager.GetLang("Recording");
-                btnStartStop.Color = Color.DarkRed;
-                _recording = true;
-
-                btnRun.Enabled = false;
-            }
+                StartRecording();
         }
 
+        private void StartRecording()
+        {
+            btnStartStop.Text = LanguageManager.GetLang("Stop");
+            labelStatus.Text = LanguageManager.GetLang("Recording");
+            btnStartStop.Color = Color.DarkRed;
+            _recording = true;
+
+            btnRun.Enabled = false;
+        }
+
+        private void StopRecording()
+        {
+            btnStartStop.Text = LanguageManager.GetLang("Start");
+            labelStatus.Text = LanguageManager.GetLang("Idle");
+            btnStartStop.Color = Color.FromArgb(33, 150, 243);
+
+            _recording = false;
+            btnRun.Enabled = true;
+        }
         /// <summary>
         /// Handles the Click event of the btnClear control.
         /// </summary>
@@ -349,7 +372,11 @@ namespace RSBot.Views
             };
 
             if (diag.ShowDialog() == DialogResult.OK)
+            {
+                EventManager.FireEvent("OnSaveScript", _ownerId, diag.FileName);
+
                 System.IO.File.WriteAllText(diag.FileName, txtScript.Text);
+            }
         }
 
         /// <summary>
@@ -389,7 +416,7 @@ namespace RSBot.Views
                     return;
 
                 ScriptManager.Load(txtScript.Text.Split('\n'));
-                Task.Run(() => ScriptManager.RunScript(false));
+                Task.Run(() => ScriptManager.RunScript(false, true));
 
                 labelStatus.Text = LanguageManager.GetLang("Running");
                 btnRun.Text = "X";

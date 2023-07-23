@@ -1,16 +1,43 @@
-﻿using System.Windows.Forms;
+﻿using RSBot.Core.Objects;
+using System.Windows.Forms;
 
 namespace RSBot.Core.Plugins
 {
     public interface IBotbase
     {
         /// <summary>
-        /// Gets or sets the information.
+        /// Gets internal the name.
         /// </summary>
         /// <value>
-        /// The information.
+        /// The name.
         /// </value>
-        BotbaseInfo Info { get; }
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets the display name (label).
+        ///
+        /// This value will be displayed as item text botbase ComboBox in the main window.
+        /// </summary>
+        /// <value>
+        /// The display name.
+        /// </value>
+        public string DisplayName { get; }
+
+        /// <summary>
+        /// This value will be displayed as TabPage text in the main window.
+        /// </summary>
+        /// <value>
+        /// The tab text.
+        /// </value>
+        public string TabText { get; }
+
+        /// <summary>
+        /// Gets the area.
+        /// </summary>
+        /// <value>
+        /// The area.
+        /// </value>
+        public Area Area { get; }
 
         /// <summary>
         /// Ticks this instance.
@@ -21,12 +48,7 @@ namespace RSBot.Core.Plugins
         /// Gets the view.
         /// </summary>
         /// <returns></returns>
-        Control GetView();
-
-        /// <summary>
-        /// Initializes this instance.
-        /// </summary>
-        void Initialize();
+        Control View { get; }
 
         /// <summary>
         /// Starts this instance.
@@ -37,6 +59,11 @@ namespace RSBot.Core.Plugins
         /// Stops this instance.
         /// </summary>
         void Stop();
+
+        /// <summary>
+        /// Called when the botbase was registered to the kernel.
+        /// </summary>
+        void Register();
 
         /// <summary>
         /// Translate the botbase plugin

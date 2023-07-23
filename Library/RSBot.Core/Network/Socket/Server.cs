@@ -2,8 +2,7 @@
 using RSBot.Core.Extensions;
 using RSBot.Core.Network.SecurityAPI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -115,11 +114,38 @@ namespace RSBot.Core.Network
 
                 try
                 {
-                    _socket.Connect(ip, port, 3000);
+                    var bindIp = GlobalConfig.Get("RSBot.Network.BindIp", "0.0.0.0");
+                    if (!string.IsNullOrWhiteSpace(bindIp) && bindIp != "0.0.0.0")
+                        _socket.Bind(new IPEndPoint(IPAddress.Parse(bindIp), port));
+
+                    if(ProxyConfig.TryGetProxy(ip, port, out var proxyConfig))
+                    {
+                        if (!_socket.ConnectViaProxy(proxyConfig).Result)
+                        {
+                            Log.Warn($"Proxy receiving has timeout!");
+                            Disconnect();
+                            return;
+                        }
+                    }
+                    else
+                        _socket.Connect(ip, port, 3000);
                 }
-                catch (SocketException)
+                catch (AggregateException s)
+                {
+                    Log.Error(s.Message);
+                    Disconnect();
+                    return;
+                }
+                catch (SocketProxyException s)
+                {
+                    Log.Error(s.Message);
+                    Disconnect();
+                    return;
+                }
+                catch (SocketException s)
                 {
                     Log.Error($"Could not establish a connection to {ip}:{port}.");
+                    Log.Error(s.Message);
                     Disconnect();
                     return;
                 }
@@ -136,7 +162,7 @@ namespace RSBot.Core.Network
 
                 EnablePacketDispatcher = true;
 
-                _socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, OnBeginReceiveCallback, null);
+                _socket?.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, OnBeginReceiveCallback, null);
 
                 OnConnected?.Invoke();
 

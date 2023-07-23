@@ -1,40 +1,36 @@
 ﻿using RSBot.Core;
+using RSBot.Core.Components;
 using RSBot.Core.Plugins;
-using RSBot.Skills.Views;
-
+using RSBot.Skills.Subscriber;
 using System.Windows.Forms;
 
-namespace RSBot.Skills
+namespace RSBot.Skills;
+
+public class Bootstrap : IPlugin
 {
-    public class Bootstrap : IPlugin
-    {
-        public PluginInfo Information => new PluginInfo
-        {
-            DisplayAsTab = true,
-            DisplayName = "Skills",
-            InternalName = "RSBot.Skills",
-            LoadIndex = 2,
-            TabDisplayIndex = 2
-        };
+    /// <inheritdoc />
+    public string InternalName => "RSBot.Skills";
 
-        /// <inheritdoc />
-        public void Initialize()
-        {
-            Views.View.Instance = new Main();
-        }
+    /// <inheritdoc />
+    public string DisplayName => "Skills";
 
-        /// <inheritdoc />
-        public Control GetView()
-        {
-            return Views.View.Instance;
-        }
+    /// <inheritdoc />
+    public bool DisplayAsTab => true;
 
-        /// <summary>
-        /// Translate the plugin
-        /// </summary>
-        public void Translate()
-        {
-            LanguageManager.Translate(GetView(), Kernel.Language);
-        }
-    }
+    /// <inheritdoc />
+    public int Index => 1;
+
+    /// <inheritdoc />
+    public bool RequireIngame => true;
+
+    /// <inheritdoc />
+    public void Initialize() =>
+        LoadCharacterSubscriber.SubscribeEvents();
+
+    /// <inheritdoc />
+    public Control View => Views.View.Instance;
+
+    /// <inheritdoc />
+    public void Translate() =>
+        LanguageManager.Translate(View, Kernel.Language);
 }

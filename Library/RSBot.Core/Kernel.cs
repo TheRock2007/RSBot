@@ -1,7 +1,6 @@
 ﻿using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Network;
-using RSBot.Core.Objects;
 using RSBot.Core.Plugins;
 using System;
 using System.Linq;
@@ -39,7 +38,7 @@ namespace RSBot.Core
         /// <value>
         /// The proxy.
         /// </value>
-        public static Proxy Proxy { get; internal set; }
+        public static Proxy Proxy { get; set; }
 
         /// <summary>
         /// Gets or sets the bot.
@@ -58,6 +57,11 @@ namespace RSBot.Core
         /// Get environment fixed tick count
         /// </summary>
         public static int TickCount => (Environment.TickCount & int.MaxValue);
+
+        /// <summary>
+        /// Get environment base directory
+        /// </summary>
+        public static string BasePath => AppDomain.CurrentDomain.BaseDirectory;
 
         /// <summary>
         /// Initializes this instance.
@@ -79,37 +83,48 @@ namespace RSBot.Core
 
         private static async Task ComponentUpdaterAsync()
         {
-            var lastUpdate = TickCount;
+            var lastTick = TickCount;
+            var lastClockTick = TickCount;
 
             while (!_updaterTokenSource.IsCancellationRequested)
             {
                 await Task.Delay(10);
-                if (!Game.Ready)
-                    continue;
 
-                var elapsed = TickCount - lastUpdate;
-
-                Game.Player.Update(elapsed);
-                Game.Player.Transport?.Update(elapsed);
-                Game.Player.JobTransport?.Update(elapsed);
-                Game.Player.AbilityPet?.Update(elapsed);
-                Game.Player.Growth?.Update(elapsed);
-                Game.Player.Fellow?.Update(elapsed);
-
-                SpawnManager.Update(elapsed);
-
-                // Collision stuffs
-                var currentRegionId = Game.Player.Movement.Source.RegionId;
-                if (CollisionManager.CenterRegionId != currentRegionId)
+                if (TickCount - lastClockTick >= 1000)
                 {
-                    Game.NearbyTeleporters = Game.ReferenceManager.GetTeleporters(currentRegionId);
-                    Log.Debug($"Found teleporters: {Game.NearbyTeleporters.Length}");
-                    CollisionManager.Update(currentRegionId);
+                    lastClockTick = TickCount;
+                    EventManager.FireEvent("OnClock");
                 }
 
-                EventManager.FireEvent("OnTick");
+                if (!Game.Ready)
+                {
+                    lastTick = TickCount;
+                    continue;
+                }
 
-                lastUpdate = TickCount;
+                try
+                {
+                    var elapsed = TickCount - lastTick;
+
+                    Game.Player.Update(elapsed);
+                    Game.Player.Transport?.Update(elapsed);
+                    Game.Player.JobTransport?.Update(elapsed);
+                    Game.Player.AbilityPet?.Update(elapsed);
+                    Game.Player.Growth?.Update(elapsed);
+                    Game.Player.Fellow?.Update(elapsed);
+
+                    SpawnManager.Update(elapsed);
+                    
+                    CollisionManager.Update(Game.Player.Position.Region);
+
+                    EventManager.FireEvent("OnTick");
+
+                    lastTick = TickCount;
+                }
+                catch (Exception e)
+                {
+                    Log.Fatal(e);
+                }
             }
         }
 
@@ -141,9 +156,9 @@ namespace RSBot.Core
                 .SelectMany(s => s.GetTypes())
                 .Where(p => type.IsAssignableFrom(p) && !p.IsInterface).ToArray();
 
-            foreach (var handler in types)
+            foreach (var hook in types)
             {
-                var instance = (IPacketHook)Activator.CreateInstance(handler);
+                var instance = (IPacketHook)Activator.CreateInstance(hook);
 
                 PacketManager.RegisterHook(instance);
             }

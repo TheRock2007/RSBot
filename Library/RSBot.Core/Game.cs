@@ -1,12 +1,14 @@
 ﻿using RSBot.Core.Client;
 using RSBot.Core.Client.ReferenceObjects;
 using RSBot.Core.Components;
+using RSBot.Core.Extensions;
 using RSBot.Core.Network;
 using RSBot.Core.Objects;
 using RSBot.Core.Objects.Party;
 using RSBot.Core.Objects.Spawn;
 using System;
 using System.IO;
+using RSBot.Core.Objects.Job;
 
 namespace RSBot.Core
 {
@@ -96,11 +98,6 @@ namespace RSBot.Core
         public static bool Started { get; set; }
 
         /// <summary>
-        /// Gets or sets the nearby teleports.
-        /// </summary>
-        public static RefTeleport[] NearbyTeleporters { get; set; }
-
-        /// <summary>
         /// Gets a value indicating whether this <see cref="Game"/> is ready.
         /// </summary>
         /// <value>
@@ -123,15 +120,14 @@ namespace RSBot.Core
             if (Kernel.Bot.Running)
                 Kernel.Bot.Stop();
 
-            if (Kernel.Proxy != null)
-                Kernel.Proxy.Shutdown();
+            Kernel.Proxy?.Shutdown();
 
             var divisionIndex = GlobalConfig.Get<int>("RSBot.DivisionIndex");
             var severIndex = GlobalConfig.Get<int>("RSBot.GatewayIndex");
 
             Port = NetworkUtilities.GetFreePort(1500, 2000, 1);
 
-            Kernel.Proxy = new Proxy();
+            Kernel.Proxy = new();
             Kernel.Proxy.Start(Port, ReferenceManager.DivisionInfo.Divisions[divisionIndex].GatewayServers[severIndex], ReferenceManager.GatewayInfo.Port);
 
             Started = true;
@@ -155,13 +151,29 @@ namespace RSBot.Core
         public static void Initialize()
         {
             ClientType = GlobalConfig.GetEnum("RSBot.Game.ClientType", GameClientType.Vietnam);
-            ReferenceManager = new ReferenceManager();
-            Party = new Party();
+            ReferenceManager = new();
+            Party = new();
 
             SkillManager.Initialize();
             ShoppingManager.Initialize();
             ClientlessManager.Initialize();
             ScriptManager.Initialize();
+        }
+
+        /// <summary>
+        /// Shows a notification in the game client using the notice chat type.
+        /// </summary>
+        /// <param name="message"></param>
+        public static void ShowNotification(string message)
+        {
+            if (!Ready)
+                return;
+
+            var chatPacket = new Packet(0x3026);
+            chatPacket.WriteByte(ChatType.Notice);
+            chatPacket.WriteConditonalString(message);
+
+            PacketManager.SendPacket(chatPacket, PacketDestination.Client);
         }
     }
 }

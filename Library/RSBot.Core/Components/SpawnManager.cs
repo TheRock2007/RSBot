@@ -12,12 +12,12 @@ namespace RSBot.Core.Components
         /// <summary>
         /// The locking object
         /// </summary>
-        private static object _lock { get; } = new object();
+        private static object _lock = new();
 
         /// <summary>
         /// The game spawned entities on the area
         /// </summary>
-        private static List<SpawnedEntity> _entities { get; set; } = new List<SpawnedEntity>(255);
+        private static List<SpawnedEntity> _entities = new(255);
 
         /// <summary>
         /// Get entity by unique id with specified generic type.
@@ -27,7 +27,7 @@ namespace RSBot.Core.Components
         public static T GetEntity<T>(uint uniqueId)
             where T : SpawnedEntity
         {
-            return (T)_entities.Find(p => p.UniqueId == uniqueId);
+            return (T)_entities.Find(p => p != null && p.UniqueId == uniqueId);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace RSBot.Core.Components
         /// <param name="entities">The entities</param>
         /// <param name="predicate">The condition</param>
         /// <returns><c>true</c> if successfully found; otherwise <c>false</c></returns>
-        public static bool TryGetEntities<T>(out IEnumerable<T> entities, Func<T, bool> predicate)
+        public static bool TryGetEntities<T>(Func<T, bool> predicate, out IEnumerable<T> entities)
             where T : SpawnedEntity
         {
             lock (_lock)
@@ -174,10 +174,8 @@ namespace RSBot.Core.Components
                 if (removedEntity == null)
                     return false;
 
-                if (Game.SelectedEntity != null && removedEntity.Equals(Game.SelectedEntity))
-                {
+                if (Game.SelectedEntity?.UniqueId == uniqueId)
                     Game.SelectedEntity = null;
-                }
 
                 removedEntity.Dispose();
                 return _entities.Remove(removedEntity);
@@ -220,13 +218,14 @@ namespace RSBot.Core.Components
                 }
 
                 var obj = Game.ReferenceManager.GetRefObjCommon(refObjId);
-
                 if (obj == null)
                 {
                     Log.Debug($"SpawnManager::Parse error while getting RefObjCommon by id {refObjId}");
 
                     return;
                 }
+
+                //Log.Debug($"Detected: {obj.GetRealName()}   {obj.CodeName}");
 
                 switch (obj.TypeID1)
                 {

@@ -41,7 +41,6 @@
             this.bottomPanel = new SDUI.Controls.Panel();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
-            ((System.ComponentModel.ISupportInitialize)(this.Radius)).BeginInit();
             this.bottomPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -100,7 +99,6 @@
             // Radius
             // 
             this.Radius.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(238)))), ((int)(((byte)(238)))), ((int)(((byte)(238)))));
-            this.Radius.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.Radius.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.Radius.Location = new System.Drawing.Point(8, 78);
             this.Radius.Minimum = new decimal(new int[] {
@@ -230,7 +228,6 @@
             this.Text = "Create training area";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.CreateTrainingAreaDialog_FormClosing);
             this.Load += new System.EventHandler(this.CreateTrainingAreaDialog_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.Radius)).EndInit();
             this.bottomPanel.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();

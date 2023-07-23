@@ -1,15 +1,26 @@
 ﻿using RSBot.Core.Components;
+using RSBot.Core.Event;
 using RSBot.Core.Network;
 using RSBot.Core.Objects.Spawn;
+using System;
+using System.Diagnostics;
 
 namespace RSBot.Core.Objects
 {
     public class Action
     {
         /// <summary>
-        /// Gets or sets the skill identifier.
+        /// Gets or sets the action identifier.
         /// </summary>
         /// <value>
+        /// The action identifier.
+        /// </value>
+        public byte Code { get; set; }
+
+        /// <summary>
+        /// Gets or sets the skill identifier.
+        /// </summary>
+        /// w<value>
         /// The skill identifier.
         /// </value>
         public uint SkillId { get; set; }
@@ -39,6 +50,14 @@ namespace RSBot.Core.Objects
         public uint TargetId { get; set; }
 
         /// <summary>
+        /// Gets or sets the target identifier.
+        /// </summary>
+        /// <value>
+        /// The target identifier.
+        /// </value>
+        public uint UnknownId { get; set; }
+
+        /// <summary>
         /// Gets or sets the flag.
         /// </summary>
         /// <value>
@@ -62,13 +81,6 @@ namespace RSBot.Core.Objects
         /// </value>
         public bool PlayerIsTarget => Game.Player.UniqueId == TargetId;
 
-        /*
-        /// <summary>
-        /// The action damage
-        /// </summary>
-        public Dictionary<uint,int> Damages { get; set; }
-        */
-
         /// <summary>
         /// Deserialize the packet. 0xB070
         /// </summary>
@@ -76,26 +88,47 @@ namespace RSBot.Core.Objects
         /// <returns>Deserialized <see cref="Action"/></returns>
         public static Action DeserializeBegin(Packet packet)
         {
+            var actionCode = packet.ReadByte();
+
             if (Game.ClientType > GameClientType.Thailand)
-                packet.ReadUShort();
+                packet.ReadByte(); // always 0x30
 
             var action = new Action
             {
+                Code = actionCode,
                 SkillId = packet.ReadUInt(),
                 ExecutorId = packet.ReadUInt(),
                 Id = packet.ReadUInt(),
             };
 
             if (Game.ClientType >= GameClientType.Global)
-                packet.ReadUInt(); // ?
+                action.UnknownId = packet.ReadUInt();
 
             action.TargetId = packet.ReadUInt();
-            action.Flag = (ActionStateFlag)packet.ReadByte();
+            if (Game.ClientType == GameClientType.Turkey ||
+                Game.ClientType == GameClientType.Global ||
+                Game.ClientType == GameClientType.VTC_Game)
+            {
+                packet.ReadByte();
+                action.Flag = (ActionStateFlag)packet.ReadByte();
+            }
+            else if (Game.ClientType == GameClientType.Rigid)
+            {
+                action.Flag = (ActionStateFlag)packet.ReadByte();
+                var flag = packet.ReadByte();
+                Debug.WriteLine("Flag:" + flag);
+            }
+            else
+                action.Flag = (ActionStateFlag)packet.ReadByte();
 
-            if (Game.ClientType >= GameClientType.Global)
+            /*if (Game.ClientType >= GameClientType.Global)
                 packet.ReadByte();
 
+            action.Flag = (ActionStateFlag)packet.ReadByte();*/
             action.SerializeDetail(packet);
+
+            if (action.TargetId != 0)
+                EventManager.FireEvent("OnEntityHit", action.Id, action.ExecutorId, action.TargetId, 0, false);
 
             return action;
         }
@@ -107,10 +140,10 @@ namespace RSBot.Core.Objects
         /// <returns>Deserialized <see cref="Action"/></returns>
         public static Action DeserializeEnd(Packet packet)
         {
-            packet.ReadUInt(); //ActionId
-            packet.ReadUInt(); //originalTargetId
-
             var action = new Action();
+            action.Id = packet.ReadUInt(); //ActionId
+            action.TargetId = packet.ReadUInt(); //originalTargetId
+
             action.Flag = (ActionStateFlag)packet.ReadByte();
             action.SerializeDetail(packet);
 
@@ -141,18 +174,29 @@ namespace RSBot.Core.Objects
                             entity.State.HitState = state;
                             if (state.HasFlag(ActionHitStateFlag.Dead))
                                 entity.State.LifeState = LifeState.Dead;
-                        }    
+                        }
 
                         if (state != ActionHitStateFlag.Block)
                         {
-                            var critStatus = packet.ReadByte();
-                            var damage = packet.ReadInt();
+                            var critStatus = packet.ReadByte(); // 0x01: normal 0x02 critical
 
-                            packet.ReadUShort();
-                            packet.ReadByte();
+                            var damage = BitConverter.ToInt32(new byte[] {
+                                packet.ReadByte(),
+                                packet.ReadByte(),
+                                packet.ReadByte(),
+                                0
+                            }, 0);
 
-                            /*Damages = Damages ?? new Dictionary<uint, int>();
-                            Damages.Add(uniqueId, damage);*/
+                            //if(entity.Health < damage)
+                            //damage = entity.Health;
+
+                            var unknownState = packet.ReadInt();
+                            Debug.WriteLine("UnknownState:" + unknownState);
+
+                            //packet.ReadUShort();
+                            //packet.ReadByte();
+
+                            EventManager.FireEvent("OnEntityHit", Id, ExecutorId, uniqueId, damage, critStatus == 0x02);
                         }
 
                         // dont worry it will return true for knockdown states

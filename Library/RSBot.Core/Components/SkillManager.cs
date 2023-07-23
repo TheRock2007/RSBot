@@ -49,6 +49,16 @@ namespace RSBot.Core.Components
         /// The buffs.
         /// </value>
         public static List<SkillInfo> Buffs { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the teleport skill.
+        /// </summary>
+        public static SkillInfo TeleportSkill { get; set; }
+
+        /// <summary>
+        /// Gets the config to always use skills in order.
+        /// </summary>
+        public static bool UseSkillsInOrder => PlayerConfig.Get( "RSBot.Skills.UseSkillsInOrder", false );
 
         /// <summary>
         /// The last casted skill id
@@ -63,12 +73,7 @@ namespace RSBot.Core.Components
         /// <summary>
         /// Basic skills
         /// </summary>
-        private static uint[] _baseSkills = new uint[]
-        {
-            70,40,2,8421,9354,
-            9355,11162,9944,8419,
-            8420,11526,10625
-        };
+        private static IEnumerable<uint> _baseSkills;
 
         /// <summary>
         /// Initializes this instance.
@@ -78,9 +83,15 @@ namespace RSBot.Core.Components
             Skills = Enum.GetValues(typeof(MonsterRarity)).Cast<MonsterRarity>().ToDictionary(v => v, v => new List<SkillInfo>());
             Buffs = new List<SkillInfo>();
 
+            EventManager.SubscribeEvent("OnLoadGameData", OnLoadGamedData);
             EventManager.SubscribeEvent("OnCastSkill", new Action<uint>(OnCastSkill));
 
             Log.Debug($"Initialized [SkillManager] for [{Skills.Count}] different mob rarities!");
+        }
+
+        private static void OnLoadGamedData()
+        {
+            _baseSkills = Game.ReferenceManager.GetBaseSkills();
         }
 
         /// <summary>
@@ -108,7 +119,7 @@ namespace RSBot.Core.Components
         /// Gets the next skill.
         /// </summary>
         /// <returns></returns>
-        public static SkillInfo? GetNextSkill()
+        public static SkillInfo GetNextSkill()
         {
             var entity = Game.SelectedEntity;
             if (entity == null)
@@ -123,7 +134,7 @@ namespace RSBot.Core.Components
             }
 
             var distance = Game.Player.Movement.Source.DistanceTo(entity.Movement.Source);
-
+            
             var minDifference = int.MaxValue;
             //var weaponRange = 0;
             var closestSkill = default(SkillInfo);
@@ -133,7 +144,7 @@ namespace RSBot.Core.Components
                 // try to get attack skill for only knockdown states
                 closestSkill = Skills[rarity].Find(p => p.Record.Params.Contains(25697));
             }
-            else if (distance < 10)
+            else if ( UseSkillsInOrder || distance < 10)
             {
                 var counter = -1;
                 var skillCount = Skills[rarity].Count;
@@ -144,6 +155,9 @@ namespace RSBot.Core.Components
 
                     if (_lastIndex > Skills[rarity].Count - 1)
                         _lastIndex = 0;
+
+                    if (!Skills.ContainsKey(rarity) || Skills[rarity].Count < _lastIndex)
+                        continue;
 
                     var selectedSkill = Skills[rarity][_lastIndex];
                     if (!selectedSkill.CanBeCasted)
@@ -264,8 +278,8 @@ namespace RSBot.Core.Components
                 return false;
 
             var packet = new Packet(0x7074);
-            packet.WriteByte(1); //Execute
-            packet.WriteByte(4); //Use Skill
+            packet.WriteByte(ActionCommandType.Execute); //Execute
+            packet.WriteByte(ActionType.Cast); //Use Skill
             packet.WriteUInt(skill.Id);
             packet.WriteByte(ActionTarget.Entity);
 
@@ -381,7 +395,7 @@ namespace RSBot.Core.Components
         /// Casts the buff skill.
         /// </summary>
         /// <param name="skillId">The skill identifier.</param>
-        public static void CastBuff(SkillInfo skill, uint target = 0)
+        public static void CastBuff(SkillInfo skill, uint target = 0, bool awaitBuffResponse = true)
         {
             if (skill.Id == 0)
                 return;
@@ -429,12 +443,62 @@ namespace RSBot.Core.Components
 
             PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback, callback);
 
-            asyncCallback.AwaitResponse(skill.Record.Action_CastingTime +
+            if (awaitBuffResponse)
+                asyncCallback.AwaitResponse(skill.Record.Action_CastingTime +
                                         skill.Record.Action_ActionDuration +
                                         skill.Record.Action_PreparingTime + 1500);
 
-            if (skill.Record.Basic_Activity != 1)
+            if (skill.Record.Basic_Activity != 1 && awaitBuffResponse)
                 callback.AwaitResponse();
+        }
+
+        /// <summary>
+        /// Casts a skill to the given target position
+        /// </summary>
+        /// <param name="skill"></param>
+        /// <param name="target"></param>
+        public static void CastSkillAt(SkillInfo skill, Position target)
+        {
+            if (target.Region == 0 || target.DistanceToPlayer() > 100)
+                return;
+
+            if (skill.Id == 0)
+                return;
+
+            if (!CheckSkillRequired(skill.Record))
+                return;
+
+            var packet = new Packet(0x7074);
+            packet.WriteByte(ActionCommandType.Execute); //Execute
+            packet.WriteByte(ActionType.Cast); //Use Skill
+            packet.WriteUInt(skill.Id);
+            packet.WriteByte(ActionTarget.Area);
+            packet.WriteUShort(target.Region);
+
+            if (target.Region.IsDungeon)
+            {
+                packet.WriteShort(target.XOffset);
+                packet.WriteShort(target.YOffset);
+                packet.WriteShort(target.ZOffset);
+            }
+            else
+            {
+                packet.WriteInt(target.XOffset);
+                packet.WriteInt(target.ZOffset);
+                packet.WriteInt(target.YOffset);
+            }
+
+            var callback = new AwaitCallback(response =>
+            {
+                return response.ReadByte() == 0x02 && response.ReadByte() == 0x00
+                    ? AwaitCallbackResult.Success : AwaitCallbackResult.ConditionFailed;
+            }, 0xB074);
+
+            PacketManager.SendPacket(packet, PacketDestination.Server, callback);
+
+            if (skill.Record.Basic_Activity != 1)
+                callback.AwaitResponse(1000);
+
         }
 
         /// <summary>
@@ -453,8 +517,8 @@ namespace RSBot.Core.Components
                 return false;
 
             var packet = new Packet(0x7074);
-            packet.WriteByte(1); //Execute
-            packet.WriteByte(1); //Use Skill
+            packet.WriteByte(ActionCommandType.Execute); //Execute
+            packet.WriteByte(ActionType.Attack); //Use Skill
             packet.WriteByte(ActionTarget.Entity);
 
             // unknown byte
@@ -477,15 +541,15 @@ namespace RSBot.Core.Components
         /// <param name="position">The position.</param>
         public static void CastSkillAt(uint skillId, Position position)
         {
-            if (!Game.Player.Skills.HasSkill(skillId)) return;
+            if (!Game.Player.Skills.HasSkill(skillId)) 
+                return;
 
             var packet = new Packet(0x7074);
-            packet.WriteByte(1); //Execute
-            packet.WriteByte(4); //Use Skill
+            packet.WriteByte(ActionCommandType.Execute); //Execute
+            packet.WriteByte(ActionType.Cast); //Use Skill
             packet.WriteUInt(skillId);
             packet.WriteByte(ActionTarget.Area);
-            packet.WriteByte(position.XSector);
-            packet.WriteByte(position.YSector);
+            position.Region.Serialize(packet);
             packet.WriteFloat(position.XOffset);
             packet.WriteFloat(position.ZOffset);
             packet.WriteFloat(position.YOffset);
@@ -499,11 +563,12 @@ namespace RSBot.Core.Components
         /// <param name="skillId">The skill identifier.</param>
         public static void CancelBuff(uint skillId)
         {
-            if (!Game.Player.Skills.HasSkill(skillId)) return;
+            if (!Game.Player.Skills.HasSkill(skillId)) 
+                return;
 
             var packet = new Packet(0x7074);
-            packet.WriteByte(1); //Execute
-            packet.WriteByte(5); //Cancel Buff
+            packet.WriteByte(ActionCommandType.Execute); //Execute
+            packet.WriteByte(ActionType.Dispel); //Cancel Buff
             packet.WriteUInt(skillId);
             packet.WriteByte(ActionTarget.None);
 

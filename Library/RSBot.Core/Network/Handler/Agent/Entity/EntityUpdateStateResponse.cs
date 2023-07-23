@@ -1,6 +1,7 @@
 ﻿using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
+using System.Linq;
 
 namespace RSBot.Core.Network.Handler.Agent.Entity
 {
@@ -41,7 +42,9 @@ namespace RSBot.Core.Network.Handler.Agent.Entity
                 case 0:
 
                     entity.State.LifeState = (LifeState)state;
-
+                    if (/*uniqueId == Game.SelectedEntity?.UniqueId || */Game.Player.GetAttackers().Any(e => e.UniqueId == uniqueId) && entity.State.LifeState == LifeState.Dead)
+                        EventManager.FireEvent("OnKillEnemy");
+               
                     if (uniqueId == Game.SelectedEntity?.UniqueId && entity.State.LifeState == LifeState.Dead)
                     {
                         EventManager.FireEvent("OnKillSelectedEnemy");
@@ -49,6 +52,9 @@ namespace RSBot.Core.Network.Handler.Agent.Entity
                     }
 
                     EventManager.FireEvent("OnUpdateEntityLifeState", uniqueId);
+
+                    if (uniqueId == Game.Player.UniqueId && entity.State.LifeState == LifeState.Dead)
+                        EventManager.FireEvent("OnPlayerDied");
 
                     break;
 

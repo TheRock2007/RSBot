@@ -75,6 +75,7 @@ namespace RSBot.Default.Bundle.Loop
         {
             Running = true;
 
+            Refresh();
             CheckForTownScript();
 
             Running = false;
@@ -96,14 +97,21 @@ namespace RSBot.Default.Bundle.Loop
         /// </summary>
         public void CheckForTownScript()
         {
-            if (ScriptManager.Running) return;
+            if (ScriptManager.Running) 
+                return;
 
-            var filename = Path.Combine(ScriptManager.InitialDirectory, "Towns", Game.Player.Movement.Source.RegionId + ".rbs");
+            var filename = Path.Combine(ScriptManager.InitialDirectory, "Towns", Game.Player.Movement.Source.Region + ".rbs");
 
             //The player is in town, therefore, we need to run the town script first.
             if (!File.Exists(filename))
             {
                 CheckForWalkbackScript();
+                return;
+            }
+
+            if( PlayerConfig.Get<bool>( "RSBot.Protection.checkStopBotOnReturnToTown" ) ) 
+            {
+                Kernel.Bot.Stop();
                 return;
             }
 
@@ -142,13 +150,13 @@ namespace RSBot.Default.Bundle.Loop
 
             Invoke();
 
-            CheckForWalkbackScript();
+            CheckForWalkbackScript(true);
         }
 
         /// <summary>
         /// Checks for walkback script.
         /// </summary>
-        public void CheckForWalkbackScript()
+        public void CheckForWalkbackScript(bool startFromTown = false)
         {
             if (Config.WalkScript == null ||
                 ScriptManager.Running ||
@@ -160,7 +168,7 @@ namespace RSBot.Default.Bundle.Loop
             Log.NotifyLang("LoadingWalkScript", Config.WalkScript);
             
             ScriptManager.Load(Config.WalkScript);
-            ScriptManager.RunScript();
+            ScriptManager.RunScript(!startFromTown);
         }
     }
 }

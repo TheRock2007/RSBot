@@ -1,7 +1,9 @@
 ﻿using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
+using RSBot.Core.Objects.Cos;
 using RSBot.Core.Objects.Spawn;
+using System.Linq;
 
 namespace RSBot.Core.Network.Handler.Agent.Entity
 {
@@ -32,7 +34,7 @@ namespace RSBot.Core.Network.Handler.Agent.Entity
             var uniqueId = packet.ReadUInt();
 
             var movement = Movement.MotionFromPacket(packet);
-            if (uniqueId == Game.Player.UniqueId || uniqueId == Game.Player.Vehicle?.UniqueId)
+            if (uniqueId == Game.Player.UniqueId)
             {
                 // Set source from movement
                 if (movement.HasSource)
@@ -41,21 +43,16 @@ namespace RSBot.Core.Network.Handler.Agent.Entity
                 if (movement.HasAngle)
                 {
                     // Movement through angle
-                    if (movement.HasDestination)
-                    {
-                        Game.Player.Move(movement.Angle);
-                        EventManager.FireEvent("OnPlayerMove");
-                    }
-                    else
-                    {
-                        Game.Player.SetAngle(movement.Angle);
-                    }
+                    Game.Player.Move(movement.Angle);
+                    EventManager.FireEvent("OnPlayerMoveAngle");
+
                     return;
                 }
 
                 // Movement through click
                 Game.Player.Move(movement.Destination);
                 EventManager.FireEvent("OnPlayerMove");
+
                 return;
             }
 
@@ -69,21 +66,19 @@ namespace RSBot.Core.Network.Handler.Agent.Entity
             if (movement.HasAngle)
             {
                 // Movement through angle
-                if (movement.HasDestination)
-                {
-                    entity.Move(movement.Angle);
-                    EventManager.FireEvent("OnEntityMove");
-                }
-                else
-                {
-                    entity.SetAngle(movement.Angle);
-                }
+                entity.Move(movement.Angle);
+                EventManager.FireEvent("OnEntityMoveAngle", uniqueId);
+
                 return;
             }
 
+            if (Game.Player.Vehicle?.UniqueId == uniqueId)
+                EventManager.FireEvent("OnVehicleMove");
+            else
+                EventManager.FireEvent("OnEntityMove", uniqueId);
+
             // Movement through click
             entity.Move(movement.Destination);
-            EventManager.FireEvent("OnEntityMove", uniqueId);
         }
     }
 }

@@ -169,6 +169,8 @@ namespace RSBot.Core.Client
         private void LoadReferenceListFileEnc<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
     where TReference : IReference<TKey>, new()
         {
+            Log.Debug($"Load file {fileName}");
+
             using (var stream = Game.MediaPk2.GetFile(fileName).GetStream())
                 LoadReferenceListFileEnc(stream, destination);
         }
@@ -194,6 +196,8 @@ namespace RSBot.Core.Client
         private void LoadReferenceFileEnc<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
             where TReference : IReference<TKey>, new()
         {
+            Log.Debug($"Load file {fileName}");
+
             using (var stream = Game.MediaPk2.GetFile(fileName).GetStream())
                 LoadReferenceFileEnc(stream, destination);
         }
@@ -201,6 +205,7 @@ namespace RSBot.Core.Client
         private void LoadReferenceFileEnc<TKey, TReference>(Stream stream, IDictionary<TKey, TReference> destination)
             where TReference : IReference<TKey>, new()
         {
+
             using (var decryptedStream = new MemoryStream())
             {
                 SkillCryptoHelper.DecryptStream(stream, decryptedStream, 0x8C1F);
@@ -213,6 +218,8 @@ namespace RSBot.Core.Client
         private void LoadReferenceListFile<TReference>(string fileName, IList<TReference> destination)
             where TReference : IReference, new()
         {
+            Log.Debug($"Load file {fileName}");
+
             using (var stream = Game.MediaPk2.GetFile(fileName).GetStream())
                 LoadReferenceListFile(stream, destination);
         }
@@ -220,6 +227,8 @@ namespace RSBot.Core.Client
         private void LoadReferenceListFile<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
             where TReference : IReference<TKey>, new()
         {
+            Log.Debug($"Load file {fileName}");
+
             using (var stream = Game.MediaPk2.GetFile(fileName).GetStream())
                 LoadReferenceListFile(stream, destination);
         }
@@ -227,6 +236,8 @@ namespace RSBot.Core.Client
         private void LoadReferenceFile<TReference>(string fileName, IList<TReference> destination)
             where TReference : IReference, new()
         {
+            Log.Debug($"Load file {fileName}");
+
             using (var stream = Game.MediaPk2.GetFile(fileName).GetStream())
                 LoadReferenceFile(stream, destination);
         }
@@ -234,6 +245,8 @@ namespace RSBot.Core.Client
         private void LoadReferenceFile<TKey, TReference>(string fileName, IDictionary<TKey, TReference> destination)
             where TReference : IReference<TKey>, new()
         {
+            Log.Debug($"Load file {fileName}");
+
             using (var stream = Game.MediaPk2.GetFile(fileName).GetStream())
                 LoadReferenceFile(stream, destination);
         }
@@ -328,6 +341,16 @@ namespace RSBot.Core.Client
         }
 
         /// <summary>
+        /// Get char skill bases
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<uint> GetBaseSkills()
+        {
+            return SkillData.Where(p => p.Value.Basic_Code.EndsWith("_BASE_01") && p.Value.Basic_Group != "xxx")
+                .Select(p => p.Key);
+        }
+
+        /// <summary>
         /// Gets the tab.
         /// </summary>
         /// <param name="codeName">Name of the code.</param>
@@ -393,6 +416,13 @@ namespace RSBot.Core.Client
                 return data;
 
             return null;
+        }
+
+        public RefSkill GetRefSkill(string codeName)
+        {
+            var skill = SkillData.FirstOrDefault(s => s.Value.Basic_Code == codeName);
+
+            return skill.Value;
         }
 
         public RefSkillMastery GetRefSkillMastery(uint id)
@@ -581,9 +611,9 @@ namespace RSBot.Core.Client
         /// </summary>
         /// <param name="regionId"></param>
         /// <returns></returns>
-        public RefTeleport[] GetTeleporters(ushort regionId)
+        public RefTeleport[] GetTeleporters(Region region)
         {
-            return TeleportData.Where(t => t.GenRegionID == regionId).ToArray();
+            return TeleportData.Where(t => t.GenRegionID == region).ToArray();
         }
 
         /// <summary>
@@ -591,9 +621,9 @@ namespace RSBot.Core.Client
         /// </summary>
         /// <param name="regionId">The region identifier.</param>
         /// <returns></returns>
-        public RefTeleport[] GetGroundTeleporters(ushort regionId)
+        public RefTeleport[] GetGroundTeleporters(Region region)
         {
-            return TeleportData.Where(t => t.GenRegionID == regionId && t.AssocRefObjId == 0).ToArray();
+            return TeleportData.Where(t => t.GenRegionID == region && t.AssocRefObjId == 0).ToArray();
         }
 
         /// <summary>

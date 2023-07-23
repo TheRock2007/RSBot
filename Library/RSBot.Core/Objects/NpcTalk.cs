@@ -28,13 +28,25 @@ namespace RSBot.Core.Objects
         {
             Flag = packet.ReadByte();
 
-            if (Flag == 2)
+            if ((Flag & 2) > 0)
             {
                 var count = 4;
                 if (Game.ClientType > GameClientType.Thailand)
                     count = packet.ReadByte();
 
+                if (Game.ClientType == GameClientType.Global ||
+                    Game.ClientType == GameClientType.Turkey ||
+                    Game.ClientType == GameClientType.VTC_Game)
+                    count = 7;
+
                 Options = packet.ReadByteArray(count);
+            }
+
+            // pandora box, after spawned mobs
+            if(Flag == 6)
+            {
+                if (packet.ReadByte() == 1) // maybe
+                    packet.ReadUInt();
             }
         }
     }

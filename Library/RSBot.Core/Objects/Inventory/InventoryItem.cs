@@ -4,6 +4,7 @@ using RSBot.Core.Objects.Item;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using RSBot.Core.Objects.Inventory;
 
 namespace RSBot.Core.Objects
 {
@@ -121,6 +122,30 @@ namespace RSBot.Core.Objects
         /// The state.
         /// </value>
         public InventoryItemCosInfo Cos;
+
+        /// <summary>
+        /// Gets a value indicating whether [item skill in use].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [item skill in use]; otherwise, <c>false</c>.
+        /// </value>
+        public bool ItemSkillInUse
+        {
+            get
+            {
+                //ToDo: Refine this whole check to act 1:1 like the client. I think Action_Overlap is a bitmap and not an actual value to work with. 
+                var refSkill = GetRefSkill();
+
+                if (refSkill != null)
+                    return Game.Player.State.ActiveBuffs.FirstOrDefault(b => b.Record.ID == refSkill.ID || b.Record.Action_Overlap == refSkill.Action_Overlap) != null;
+
+                var perk = Game.Player.State.ActiveItemPerks.Values.FirstOrDefault(p =>
+                    p.ItemId == Record.ID ||
+                    (Record.Param1 > 0 && p.Item.Param1 == Record.Param1));
+
+                return perk != null;
+            }
+        }
 
         /// <summary>
         /// Uses the item
@@ -293,8 +318,10 @@ namespace RSBot.Core.Objects
                         case GameClientType.Chinese:
                         case GameClientType.Global:
                         case GameClientType.Turkey:
+                        case GameClientType.Rigid:
                             bindingCount = 4;
                             break;
+                        case GameClientType.VTC_Game:
                         case GameClientType.Korean:
                             bindingCount = 3;
                             break;
@@ -328,7 +355,7 @@ namespace RSBot.Core.Objects
                     for (int i = 0; i < buffCount; i++)
                     {
                         var buffType = packet.ReadByte();
-                        if (buffType == 0 || buffType == 20)
+                        if (buffType == 0 || buffType == 20 || buffType == 6)
                         {
                             var itemId = packet.ReadUInt(); // buffType: 0 => skillId ? 20 => itemId
                             var leftTime = packet.ReadUInt();
@@ -376,7 +403,13 @@ namespace RSBot.Core.Objects
                         packet.ReadUInt();
                     }
                 }
+
+                if (record.IsTrading)
+                    //Owner name (Player name)
+                    packet.ReadString();
             }
+            
+
 
             return item;
         }
@@ -426,6 +459,14 @@ namespace RSBot.Core.Objects
                 return filter.EqualsRefItem(Record);
 
             return false;
+        }
+
+        public RefSkill? GetRefSkill()
+        {
+            if (string.IsNullOrEmpty(Record.Desc1))
+                return null;
+
+            return Game.ReferenceManager.GetRefSkill(Record.Desc1);
         }
 
         public InventoryItem Clone()

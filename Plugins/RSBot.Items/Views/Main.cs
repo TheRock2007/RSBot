@@ -402,6 +402,7 @@ namespace RSBot.Items.Views
             #endregion Accessory
 
             #region Shields
+
             if (checkShield.Checked && checkChinese.Checked)
                 filters.Add(new TypeIdFilter(3, 1, 4, 1));
 
@@ -414,7 +415,7 @@ namespace RSBot.Items.Views
                 filters.Add(new TypeIdFilter(3, 1, 4, 2));
             }
 
-            #endregion
+            #endregion Shields
 
             #endregion Equipment
 
@@ -477,7 +478,7 @@ namespace RSBot.Items.Views
             string getSubItemString(RefObjItem item)
             {
                 var filter = PickupManager.PickupFilter.Find(p => p.CodeName == item.CodeName);
-                if(string.IsNullOrWhiteSpace(filter.CodeName))
+                if (string.IsNullOrWhiteSpace(filter.CodeName))
                     return "•";
 
                 if (filter.PickOnlyChar)
@@ -562,6 +563,10 @@ namespace RSBot.Items.Views
             cbJustpickmyitems.Checked = PlayerConfig.Get("RSBot.Items.Pickup.JustPickMyItems", false);
             cbDontPickupWhileBotting.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.DontPickupWhileBotting");
 
+            checkQuestItems.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.Quest");
+            checkAllEquips.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.AnyEquips");
+            checkEverything.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.Everything");
+
             ShoppingManager.Enabled = checkEnable.Checked;
             ShoppingManager.RepairGear = checkRepairGear.Checked;
             ShoppingManager.SellPetItems = checkSellItemsFromPet.Checked;
@@ -616,10 +621,11 @@ namespace RSBot.Items.Views
         {
             foreach (ListViewItem listItem in listAvailableProducts.SelectedItems)
             {
+                var refItem = Game.ReferenceManager.GetRefItem(listItem.Name);
                 var title = LanguageManager.GetLang("InputDialogTitle");
                 var content = LanguageManager.GetLang("InputDialogContent");
-
-                var dialog = new InputDialog(title, listItem.Text, content, InputDialog.InputType.Numeric);
+                var itemNameTrans = LanguageManager.GetLang("InputDialogItemName", refItem.GetRealName(), refItem.MaxStack);
+                var dialog = new InputDialog(title, itemNameTrans, content, InputDialog.InputType.Numeric);
                 if (dialog.ShowDialog(this) == DialogResult.Cancel)
                     return;
 
@@ -923,19 +929,64 @@ namespace RSBot.Items.Views
             PlayerConfig.Set("RSBot.Items.Pickup.DontPickupInBerzerk", checkDontPickupInBerzerk.Checked);
         }
 
+        /// <summary>
+        /// Handles the CheckedChanged event of the cbJustpickmyitems control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void cbJustpickmyitems_CheckedChanged(object sender, EventArgs e)
         {
             PlayerConfig.Set("RSBot.Items.Pickup.JustPickMyItems", cbJustpickmyitems.Checked);
         }
 
+        /// <summary>
+        /// Handles the CheckedChanged event of the cbDontPickupWhileAttacking control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void cbDontPickupWhileAttacking_CheckedChanged(object sender, EventArgs e)
         {
             PlayerConfig.Set("RSBot.Items.Pickup.DontPickupWhileAttacking", cbDontPickupWhileBotting.Checked);
         }
 
+        /// <summary>
+        /// Handles the CheckedChanged event of the cbDontPickupWhileBotting control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void cbDontPickupWhileBotting_CheckedChanged(object sender, EventArgs e)
         {
             PlayerConfig.Set("RSBot.Items.Pickup.DontPickupWhileBotting", cbDontPickupWhileBotting.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkQuestItems control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void checkQuestItems_CheckedChanged(object sender, EventArgs e)
+        {
+            PlayerConfig.Set("RSBot.Items.Pickup.Quest", checkQuestItems.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkAllEquips control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void checkAllEquips_CheckedChanged(object sender, EventArgs e)
+        {
+            PlayerConfig.Set("RSBot.Items.Pickup.AnyEquips", checkAllEquips.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkEverything control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        private void checkEverything_CheckedChanged(object sender, EventArgs e)
+        {
+            PlayerConfig.Set("RSBot.Items.Pickup.Everything", checkEverything.Checked);
         }
 
         #endregion Pickup

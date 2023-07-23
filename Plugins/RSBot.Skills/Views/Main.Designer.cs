@@ -28,842 +28,930 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.groupBox1 = new SDUI.Controls.GroupBox();
-            this.checkBoxNoAttack = new SDUI.Controls.CheckBox();
-            this.listAttackingSkills = new SDUI.Controls.ListView();
-            this.columnName = new System.Windows.Forms.ColumnHeader();
-            this.columnLevel = new System.Windows.Forms.ColumnHeader();
-            this.label2 = new SDUI.Controls.Label();
-            this.comboMonsterType = new SDUI.Controls.ComboBox();
-            this.btnMoveAttackSkillDown = new SDUI.Controls.Button();
-            this.btnMoveAttackSkillUp = new SDUI.Controls.Button();
-            this.btnRemoveAttackSkill = new SDUI.Controls.Button();
-            this.groupBox2 = new SDUI.Controls.GroupBox();
-            this.listBuffs = new SDUI.Controls.ListView();
-            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
-            this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
-            this.btnMoveBuffSkillDown = new SDUI.Controls.Button();
-            this.comboImbue = new SDUI.Controls.ComboBox();
-            this.btnMoveBuffSkillUp = new SDUI.Controls.Button();
-            this.label1 = new SDUI.Controls.Label();
-            this.btnRemoveBuffSkill = new SDUI.Controls.Button();
-            this.tabControl1 = new SDUI.Controls.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.groupWarlockMode = new SDUI.Controls.GroupBox();
-            this.checkWarlockMode = new SDUI.Controls.CheckBox();
-            this.grpMasteryLearn = new SDUI.Controls.GroupBox();
-            this.checkLearnMasteryBotStopped = new SDUI.Controls.CheckBox();
-            this.label4 = new SDUI.Controls.Label();
-            this.numMasteryGap = new SDUI.Controls.NumUpDown();
-            this.comboLearnMastery = new SDUI.Controls.ComboBox();
-            this.checkLearnMastery = new SDUI.Controls.CheckBox();
-            this.groupBox3 = new SDUI.Controls.GroupBox();
-            this.comboResurrectionSkill = new SDUI.Controls.ComboBox();
-            this.checkAcceptResurrection = new SDUI.Controls.CheckBox();
-            this.label3 = new SDUI.Controls.Label();
-            this.checkResurrectParty = new SDUI.Controls.CheckBox();
-            this.groupBox4 = new SDUI.Controls.GroupBox();
-            this.checkCastBuffsDuringWalkBack = new SDUI.Controls.CheckBox();
-            this.checkCastBuffsInTowns = new SDUI.Controls.CheckBox();
-            this.tabControl2 = new SDUI.Controls.TabControl();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.listSkills = new SDUI.Controls.ListView();
-            this.colName = new System.Windows.Forms.ColumnHeader();
-            this.colLevel = new System.Windows.Forms.ColumnHeader();
-            this.skillContextMenu = new SDUI.Controls.ContextMenuStrip();
-            this.skillContextMenuAddAttackSkill = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.skillContextMenuAddBuffSkill = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.useToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel1 = new SDUI.Controls.Panel();
-            this.panel2 = new SDUI.Controls.Panel();
-            this.checkHideLowerLevelSkills = new SDUI.Controls.CheckBox();
-            this.checkShowAttacks = new SDUI.Controls.CheckBox();
-            this.checkShowBuffs = new SDUI.Controls.CheckBox();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.listActiveBuffs = new SDUI.Controls.ListView();
-            this.colActiveName = new System.Windows.Forms.ColumnHeader();
-            this.colActiveLevel = new System.Windows.Forms.ColumnHeader();
-            this.useToPartyMemberToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.tabControl1.SuspendLayout();
-            this.tabPage1.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.groupWarlockMode.SuspendLayout();
-            this.grpMasteryLearn.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numMasteryGap)).BeginInit();
-            this.groupBox3.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.tabControl2.SuspendLayout();
-            this.tabPage3.SuspendLayout();
-            this.skillContextMenu.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.tabPage4.SuspendLayout();
-            this.SuspendLayout();
+            groupBox1 = new SDUI.Controls.GroupBox();
+            checkUseSkillsInOrder = new SDUI.Controls.CheckBox();
+            checkBoxNoAttack = new SDUI.Controls.CheckBox();
+            listAttackingSkills = new SDUI.Controls.ListView();
+            columnName = new System.Windows.Forms.ColumnHeader();
+            columnLevel = new System.Windows.Forms.ColumnHeader();
+            label2 = new SDUI.Controls.Label();
+            comboMonsterType = new SDUI.Controls.ComboBox();
+            btnMoveAttackSkillDown = new SDUI.Controls.Button();
+            btnMoveAttackSkillUp = new SDUI.Controls.Button();
+            btnRemoveAttackSkill = new SDUI.Controls.Button();
+            groupBox2 = new SDUI.Controls.GroupBox();
+            listBuffs = new SDUI.Controls.ListView();
+            columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            columnHeader2 = new System.Windows.Forms.ColumnHeader();
+            btnMoveBuffSkillDown = new SDUI.Controls.Button();
+            comboImbue = new SDUI.Controls.ComboBox();
+            btnMoveBuffSkillUp = new SDUI.Controls.Button();
+            label1 = new SDUI.Controls.Label();
+            btnRemoveBuffSkill = new SDUI.Controls.Button();
+            tabControl1 = new SDUI.Controls.TabControl();
+            tabPage1 = new System.Windows.Forms.TabPage();
+            tabPage2 = new System.Windows.Forms.TabPage();
+            groupWarlockMode = new SDUI.Controls.GroupBox();
+            comboTeleportSkill = new SDUI.Controls.ComboBox();
+            checkUseTeleportSkill = new SDUI.Controls.CheckBox();
+            checkUseDefaultAttack = new SDUI.Controls.CheckBox();
+            checkWarlockMode = new SDUI.Controls.CheckBox();
+            grpMasteryLearn = new SDUI.Controls.GroupBox();
+            checkLearnMasteryBotStopped = new SDUI.Controls.CheckBox();
+            label4 = new SDUI.Controls.Label();
+            numMasteryGap = new SDUI.Controls.NumUpDown();
+            comboLearnMastery = new SDUI.Controls.ComboBox();
+            checkLearnMastery = new SDUI.Controls.CheckBox();
+            groupBox3 = new SDUI.Controls.GroupBox();
+            comboResurrectionSkill = new SDUI.Controls.ComboBox();
+            checkAcceptResurrection = new SDUI.Controls.CheckBox();
+            label3 = new SDUI.Controls.Label();
+            checkResurrectParty = new SDUI.Controls.CheckBox();
+            groupBox4 = new SDUI.Controls.GroupBox();
+            checkCastBuffsDuringWalkBack = new SDUI.Controls.CheckBox();
+            checkCastBuffsInTowns = new SDUI.Controls.CheckBox();
+            tabControl2 = new SDUI.Controls.TabControl();
+            tabPage3 = new System.Windows.Forms.TabPage();
+            listSkills = new SDUI.Controls.ListView();
+            colName = new System.Windows.Forms.ColumnHeader();
+            colLevel = new System.Windows.Forms.ColumnHeader();
+            skillContextMenu = new SDUI.Controls.ContextMenuStrip();
+            skillContextMenuAddAttackSkill = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            skillContextMenuAddBuffSkill = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            useToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            useToPartyMemberToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            panel1 = new SDUI.Controls.Panel();
+            panel2 = new SDUI.Controls.Panel();
+            checkHideLowerLevelSkills = new SDUI.Controls.CheckBox();
+            checkShowAttacks = new SDUI.Controls.CheckBox();
+            checkShowBuffs = new SDUI.Controls.CheckBox();
+            tabPage4 = new System.Windows.Forms.TabPage();
+            listActiveBuffs = new SDUI.Controls.ListView();
+            colActiveName = new System.Windows.Forms.ColumnHeader();
+            colActiveLevel = new System.Windows.Forms.ColumnHeader();
+            groupBox1.SuspendLayout();
+            groupBox2.SuspendLayout();
+            tabControl1.SuspendLayout();
+            tabPage1.SuspendLayout();
+            tabPage2.SuspendLayout();
+            groupWarlockMode.SuspendLayout();
+            grpMasteryLearn.SuspendLayout();
+            groupBox3.SuspendLayout();
+            groupBox4.SuspendLayout();
+            tabControl2.SuspendLayout();
+            tabPage3.SuspendLayout();
+            skillContextMenu.SuspendLayout();
+            panel1.SuspendLayout();
+            tabPage4.SuspendLayout();
+            SuspendLayout();
             // 
             // groupBox1
             // 
-            this.groupBox1.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox1.Controls.Add(this.checkBoxNoAttack);
-            this.groupBox1.Controls.Add(this.listAttackingSkills);
-            this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.comboMonsterType);
-            this.groupBox1.Controls.Add(this.btnMoveAttackSkillDown);
-            this.groupBox1.Controls.Add(this.btnMoveAttackSkillUp);
-            this.groupBox1.Controls.Add(this.btnRemoveAttackSkill);
-            this.groupBox1.Location = new System.Drawing.Point(14, 5);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.groupBox1.Radius = 2;
-            this.groupBox1.ShadowDepth = 4;
-            this.groupBox1.Size = new System.Drawing.Size(357, 205);
-            this.groupBox1.TabIndex = 1;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Attacking skills";
+            groupBox1.BackColor = System.Drawing.Color.Transparent;
+            groupBox1.Controls.Add(checkUseSkillsInOrder);
+            groupBox1.Controls.Add(checkBoxNoAttack);
+            groupBox1.Controls.Add(listAttackingSkills);
+            groupBox1.Controls.Add(label2);
+            groupBox1.Controls.Add(comboMonsterType);
+            groupBox1.Controls.Add(btnMoveAttackSkillDown);
+            groupBox1.Controls.Add(btnMoveAttackSkillUp);
+            groupBox1.Controls.Add(btnRemoveAttackSkill);
+            groupBox1.Location = new System.Drawing.Point(14, 5);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
+            groupBox1.Radius = 10;
+            groupBox1.ShadowDepth = 4;
+            groupBox1.Size = new System.Drawing.Size(357, 213);
+            groupBox1.TabIndex = 1;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Attacking skills";
+            // 
+            // checkUseSkillsInOrder
+            // 
+            checkUseSkillsInOrder.BackColor = System.Drawing.Color.Transparent;
+            checkUseSkillsInOrder.Depth = 0;
+            checkUseSkillsInOrder.Location = new System.Drawing.Point(231, 194);
+            checkUseSkillsInOrder.Margin = new System.Windows.Forms.Padding(0);
+            checkUseSkillsInOrder.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkUseSkillsInOrder.Name = "checkUseSkillsInOrder";
+            checkUseSkillsInOrder.Ripple = true;
+            checkUseSkillsInOrder.Size = new System.Drawing.Size(86, 15);
+            checkUseSkillsInOrder.TabIndex = 10;
+            checkUseSkillsInOrder.Text = "Use in order";
+            checkUseSkillsInOrder.UseVisualStyleBackColor = false;
+            checkUseSkillsInOrder.CheckedChanged += checkUseSkillsInOrder_CheckedChanged;
             // 
             // checkBoxNoAttack
             // 
-            this.checkBoxNoAttack.AutoSize = true;
-            this.checkBoxNoAttack.BackColor = System.Drawing.Color.Transparent;
-            this.checkBoxNoAttack.Location = new System.Drawing.Point(247, 179);
-            this.checkBoxNoAttack.Name = "checkBoxNoAttack";
-            this.checkBoxNoAttack.ShadowDepth = 1;
-            this.checkBoxNoAttack.Size = new System.Drawing.Size(76, 15);
-            this.checkBoxNoAttack.TabIndex = 9;
-            this.checkBoxNoAttack.Text = "No Attack";
-            this.checkBoxNoAttack.UseVisualStyleBackColor = false;
-            this.checkBoxNoAttack.CheckedChanged += new System.EventHandler(this.checkBoxNoAttack_CheckedChanged);
+            checkBoxNoAttack.BackColor = System.Drawing.Color.Transparent;
+            checkBoxNoAttack.Depth = 0;
+            checkBoxNoAttack.Location = new System.Drawing.Point(231, 175);
+            checkBoxNoAttack.Margin = new System.Windows.Forms.Padding(0);
+            checkBoxNoAttack.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkBoxNoAttack.Name = "checkBoxNoAttack";
+            checkBoxNoAttack.Ripple = true;
+            checkBoxNoAttack.Size = new System.Drawing.Size(76, 15);
+            checkBoxNoAttack.TabIndex = 9;
+            checkBoxNoAttack.Text = "No Attack";
+            checkBoxNoAttack.UseVisualStyleBackColor = false;
+            checkBoxNoAttack.CheckedChanged += checkBoxNoAttack_CheckedChanged;
             // 
             // listAttackingSkills
             // 
-            this.listAttackingSkills.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnName,
-            this.columnLevel});
-            this.listAttackingSkills.FullRowSelect = true;
-            this.listAttackingSkills.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listAttackingSkills.Location = new System.Drawing.Point(6, 25);
-            this.listAttackingSkills.Name = "listAttackingSkills";
-            this.listAttackingSkills.Size = new System.Drawing.Size(315, 146);
-            this.listAttackingSkills.TabIndex = 8;
-            this.listAttackingSkills.UseCompatibleStateImageBehavior = false;
-            this.listAttackingSkills.View = System.Windows.Forms.View.Details;
+            listAttackingSkills.BackColor = System.Drawing.Color.White;
+            listAttackingSkills.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { columnName, columnLevel });
+            listAttackingSkills.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            listAttackingSkills.FullRowSelect = true;
+            listAttackingSkills.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            listAttackingSkills.Location = new System.Drawing.Point(6, 25);
+            listAttackingSkills.Name = "listAttackingSkills";
+            listAttackingSkills.Size = new System.Drawing.Size(315, 146);
+            listAttackingSkills.TabIndex = 8;
+            listAttackingSkills.UseCompatibleStateImageBehavior = false;
+            listAttackingSkills.View = System.Windows.Forms.View.Details;
             // 
             // columnName
             // 
-            this.columnName.Text = "Name";
-            this.columnName.Width = 248;
+            columnName.Text = "Name";
+            columnName.Width = 248;
             // 
             // columnLevel
             // 
-            this.columnLevel.Text = "Level";
+            columnLevel.Text = "Level";
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.label2.Location = new System.Drawing.Point(9, 180);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(34, 15);
-            this.label2.TabIndex = 7;
-            this.label2.Text = "Type:";
+            label2.ApplyGradient = false;
+            label2.AutoSize = true;
+            label2.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            label2.Gradient = (new System.Drawing.Color[] { System.Drawing.Color.Gray, System.Drawing.Color.Black });
+            label2.Location = new System.Drawing.Point(9, 183);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(34, 15);
+            label2.TabIndex = 7;
+            label2.Text = "Type:";
             // 
             // comboMonsterType
             // 
-            this.comboMonsterType.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.comboMonsterType.DropDownHeight = 100;
-            this.comboMonsterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboMonsterType.FormattingEnabled = true;
-            this.comboMonsterType.IntegralHeight = false;
-            this.comboMonsterType.ItemHeight = 17;
-            this.comboMonsterType.Items.AddRange(new object[] {
-            "General (Default)",
-            "Champion",
-            "Giant",
-            "General (Party)",
-            "Champion (Party)",
-            "Giant (Party)",
-            "Elite",
-            "Strong",
-            "Unique"});
-            this.comboMonsterType.Location = new System.Drawing.Point(54, 177);
-            this.comboMonsterType.Name = "comboMonsterType";
-            this.comboMonsterType.Radius = 5;
-            this.comboMonsterType.ShadowDepth = 4F;
-            this.comboMonsterType.Size = new System.Drawing.Size(176, 23);
-            this.comboMonsterType.TabIndex = 2;
-            this.comboMonsterType.SelectedIndexChanged += new System.EventHandler(this.comboMonsterType_SelectedIndexChanged);
+            comboMonsterType.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            comboMonsterType.DropDownHeight = 100;
+            comboMonsterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            comboMonsterType.FormattingEnabled = true;
+            comboMonsterType.IntegralHeight = false;
+            comboMonsterType.ItemHeight = 17;
+            comboMonsterType.Items.AddRange(new object[] { "General (Default)", "Champion", "Giant", "General (Party)", "Champion (Party)", "Giant (Party)", "Elite", "Strong", "Unique", "Event" });
+            comboMonsterType.Location = new System.Drawing.Point(54, 180);
+            comboMonsterType.Name = "comboMonsterType";
+            comboMonsterType.Radius = 5;
+            comboMonsterType.ShadowDepth = 4F;
+            comboMonsterType.Size = new System.Drawing.Size(171, 23);
+            comboMonsterType.TabIndex = 2;
+            comboMonsterType.SelectedIndexChanged += comboMonsterType_SelectedIndexChanged;
             // 
             // btnMoveAttackSkillDown
             // 
-            this.btnMoveAttackSkillDown.Color = System.Drawing.Color.Transparent;
-            this.btnMoveAttackSkillDown.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnMoveAttackSkillDown.Location = new System.Drawing.Point(327, 85);
-            this.btnMoveAttackSkillDown.Name = "btnMoveAttackSkillDown";
-            this.btnMoveAttackSkillDown.Radius = 2;
-            this.btnMoveAttackSkillDown.ShadowDepth = 4F;
-            this.btnMoveAttackSkillDown.Size = new System.Drawing.Size(24, 24);
-            this.btnMoveAttackSkillDown.TabIndex = 1;
-            this.btnMoveAttackSkillDown.Text = "6";
-            this.btnMoveAttackSkillDown.UseVisualStyleBackColor = true;
-            this.btnMoveAttackSkillDown.Click += new System.EventHandler(this.btnMoveAttackSkillDown_Click);
+            btnMoveAttackSkillDown.Color = System.Drawing.Color.Transparent;
+            btnMoveAttackSkillDown.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnMoveAttackSkillDown.Location = new System.Drawing.Point(327, 85);
+            btnMoveAttackSkillDown.Name = "btnMoveAttackSkillDown";
+            btnMoveAttackSkillDown.Radius = 6;
+            btnMoveAttackSkillDown.ShadowDepth = 4F;
+            btnMoveAttackSkillDown.Size = new System.Drawing.Size(24, 24);
+            btnMoveAttackSkillDown.TabIndex = 1;
+            btnMoveAttackSkillDown.Text = "6";
+            btnMoveAttackSkillDown.UseVisualStyleBackColor = true;
+            btnMoveAttackSkillDown.Click += btnMoveAttackSkillDown_Click;
             // 
             // btnMoveAttackSkillUp
             // 
-            this.btnMoveAttackSkillUp.Color = System.Drawing.Color.Transparent;
-            this.btnMoveAttackSkillUp.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnMoveAttackSkillUp.Location = new System.Drawing.Point(327, 55);
-            this.btnMoveAttackSkillUp.Name = "btnMoveAttackSkillUp";
-            this.btnMoveAttackSkillUp.Radius = 2;
-            this.btnMoveAttackSkillUp.ShadowDepth = 4F;
-            this.btnMoveAttackSkillUp.Size = new System.Drawing.Size(24, 24);
-            this.btnMoveAttackSkillUp.TabIndex = 1;
-            this.btnMoveAttackSkillUp.Text = "5";
-            this.btnMoveAttackSkillUp.UseVisualStyleBackColor = true;
-            this.btnMoveAttackSkillUp.Click += new System.EventHandler(this.btnMoveAttackSkillUp_Click);
+            btnMoveAttackSkillUp.Color = System.Drawing.Color.Transparent;
+            btnMoveAttackSkillUp.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnMoveAttackSkillUp.Location = new System.Drawing.Point(327, 55);
+            btnMoveAttackSkillUp.Name = "btnMoveAttackSkillUp";
+            btnMoveAttackSkillUp.Radius = 6;
+            btnMoveAttackSkillUp.ShadowDepth = 4F;
+            btnMoveAttackSkillUp.Size = new System.Drawing.Size(24, 24);
+            btnMoveAttackSkillUp.TabIndex = 1;
+            btnMoveAttackSkillUp.Text = "5";
+            btnMoveAttackSkillUp.UseVisualStyleBackColor = true;
+            btnMoveAttackSkillUp.Click += btnMoveAttackSkillUp_Click;
             // 
             // btnRemoveAttackSkill
             // 
-            this.btnRemoveAttackSkill.Color = System.Drawing.Color.Transparent;
-            this.btnRemoveAttackSkill.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnRemoveAttackSkill.Location = new System.Drawing.Point(327, 25);
-            this.btnRemoveAttackSkill.Name = "btnRemoveAttackSkill";
-            this.btnRemoveAttackSkill.Radius = 2;
-            this.btnRemoveAttackSkill.ShadowDepth = 4F;
-            this.btnRemoveAttackSkill.Size = new System.Drawing.Size(24, 22);
-            this.btnRemoveAttackSkill.TabIndex = 1;
-            this.btnRemoveAttackSkill.Text = "r";
-            this.btnRemoveAttackSkill.UseVisualStyleBackColor = true;
-            this.btnRemoveAttackSkill.Click += new System.EventHandler(this.btnRemoveAttackSkill_Click);
+            btnRemoveAttackSkill.Color = System.Drawing.Color.Transparent;
+            btnRemoveAttackSkill.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnRemoveAttackSkill.Location = new System.Drawing.Point(327, 25);
+            btnRemoveAttackSkill.Name = "btnRemoveAttackSkill";
+            btnRemoveAttackSkill.Radius = 6;
+            btnRemoveAttackSkill.ShadowDepth = 4F;
+            btnRemoveAttackSkill.Size = new System.Drawing.Size(24, 22);
+            btnRemoveAttackSkill.TabIndex = 1;
+            btnRemoveAttackSkill.Text = "r";
+            btnRemoveAttackSkill.UseVisualStyleBackColor = true;
+            btnRemoveAttackSkill.Click += btnRemoveAttackSkill_Click;
             // 
             // groupBox2
             // 
-            this.groupBox2.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox2.Controls.Add(this.listBuffs);
-            this.groupBox2.Controls.Add(this.btnMoveBuffSkillDown);
-            this.groupBox2.Controls.Add(this.comboImbue);
-            this.groupBox2.Controls.Add(this.btnMoveBuffSkillUp);
-            this.groupBox2.Controls.Add(this.label1);
-            this.groupBox2.Controls.Add(this.btnRemoveBuffSkill);
-            this.groupBox2.Location = new System.Drawing.Point(14, 216);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.groupBox2.Radius = 2;
-            this.groupBox2.ShadowDepth = 4;
-            this.groupBox2.Size = new System.Drawing.Size(357, 198);
-            this.groupBox2.TabIndex = 2;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Buffing skills";
+            groupBox2.BackColor = System.Drawing.Color.Transparent;
+            groupBox2.Controls.Add(listBuffs);
+            groupBox2.Controls.Add(btnMoveBuffSkillDown);
+            groupBox2.Controls.Add(comboImbue);
+            groupBox2.Controls.Add(btnMoveBuffSkillUp);
+            groupBox2.Controls.Add(label1);
+            groupBox2.Controls.Add(btnRemoveBuffSkill);
+            groupBox2.Location = new System.Drawing.Point(14, 224);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
+            groupBox2.Radius = 10;
+            groupBox2.ShadowDepth = 4;
+            groupBox2.Size = new System.Drawing.Size(357, 198);
+            groupBox2.TabIndex = 2;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Buffing skills";
             // 
             // listBuffs
             // 
-            this.listBuffs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2});
-            this.listBuffs.FullRowSelect = true;
-            this.listBuffs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listBuffs.Location = new System.Drawing.Point(6, 27);
-            this.listBuffs.Name = "listBuffs";
-            this.listBuffs.Size = new System.Drawing.Size(315, 138);
-            this.listBuffs.TabIndex = 8;
-            this.listBuffs.UseCompatibleStateImageBehavior = false;
-            this.listBuffs.View = System.Windows.Forms.View.Details;
+            listBuffs.BackColor = System.Drawing.Color.White;
+            listBuffs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { columnHeader1, columnHeader2 });
+            listBuffs.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            listBuffs.FullRowSelect = true;
+            listBuffs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            listBuffs.Location = new System.Drawing.Point(6, 27);
+            listBuffs.Name = "listBuffs";
+            listBuffs.Size = new System.Drawing.Size(315, 138);
+            listBuffs.TabIndex = 8;
+            listBuffs.UseCompatibleStateImageBehavior = false;
+            listBuffs.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Text = "Name";
-            this.columnHeader1.Width = 248;
+            columnHeader1.Text = "Name";
+            columnHeader1.Width = 248;
             // 
             // columnHeader2
             // 
-            this.columnHeader2.Text = "Level";
+            columnHeader2.Text = "Level";
             // 
             // btnMoveBuffSkillDown
             // 
-            this.btnMoveBuffSkillDown.Color = System.Drawing.Color.Transparent;
-            this.btnMoveBuffSkillDown.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnMoveBuffSkillDown.Location = new System.Drawing.Point(327, 87);
-            this.btnMoveBuffSkillDown.Name = "btnMoveBuffSkillDown";
-            this.btnMoveBuffSkillDown.Radius = 2;
-            this.btnMoveBuffSkillDown.ShadowDepth = 4F;
-            this.btnMoveBuffSkillDown.Size = new System.Drawing.Size(24, 24);
-            this.btnMoveBuffSkillDown.TabIndex = 8;
-            this.btnMoveBuffSkillDown.Text = "6";
-            this.btnMoveBuffSkillDown.UseVisualStyleBackColor = true;
-            this.btnMoveBuffSkillDown.Click += new System.EventHandler(this.btnMoveBuffSkillDown_Click);
+            btnMoveBuffSkillDown.Color = System.Drawing.Color.Transparent;
+            btnMoveBuffSkillDown.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnMoveBuffSkillDown.Location = new System.Drawing.Point(327, 87);
+            btnMoveBuffSkillDown.Name = "btnMoveBuffSkillDown";
+            btnMoveBuffSkillDown.Radius = 6;
+            btnMoveBuffSkillDown.ShadowDepth = 4F;
+            btnMoveBuffSkillDown.Size = new System.Drawing.Size(24, 24);
+            btnMoveBuffSkillDown.TabIndex = 8;
+            btnMoveBuffSkillDown.Text = "6";
+            btnMoveBuffSkillDown.UseVisualStyleBackColor = true;
+            btnMoveBuffSkillDown.Click += btnMoveBuffSkillDown_Click;
             // 
             // comboImbue
             // 
-            this.comboImbue.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.comboImbue.DropDownHeight = 100;
-            this.comboImbue.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboImbue.FormattingEnabled = true;
-            this.comboImbue.IntegralHeight = false;
-            this.comboImbue.ItemHeight = 17;
-            this.comboImbue.Location = new System.Drawing.Point(54, 171);
-            this.comboImbue.Name = "comboImbue";
-            this.comboImbue.Radius = 5;
-            this.comboImbue.ShadowDepth = 4F;
-            this.comboImbue.Size = new System.Drawing.Size(267, 23);
-            this.comboImbue.TabIndex = 7;
-            this.comboImbue.SelectedIndexChanged += new System.EventHandler(this.comboImbue_SelectedIndexChanged);
+            comboImbue.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            comboImbue.DropDownHeight = 100;
+            comboImbue.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            comboImbue.FormattingEnabled = true;
+            comboImbue.IntegralHeight = false;
+            comboImbue.ItemHeight = 17;
+            comboImbue.Location = new System.Drawing.Point(54, 171);
+            comboImbue.Name = "comboImbue";
+            comboImbue.Radius = 5;
+            comboImbue.ShadowDepth = 4F;
+            comboImbue.Size = new System.Drawing.Size(267, 23);
+            comboImbue.TabIndex = 7;
+            comboImbue.SelectedIndexChanged += comboImbue_SelectedIndexChanged;
             // 
             // btnMoveBuffSkillUp
             // 
-            this.btnMoveBuffSkillUp.Color = System.Drawing.Color.Transparent;
-            this.btnMoveBuffSkillUp.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnMoveBuffSkillUp.Location = new System.Drawing.Point(327, 57);
-            this.btnMoveBuffSkillUp.Name = "btnMoveBuffSkillUp";
-            this.btnMoveBuffSkillUp.Radius = 2;
-            this.btnMoveBuffSkillUp.ShadowDepth = 4F;
-            this.btnMoveBuffSkillUp.Size = new System.Drawing.Size(24, 24);
-            this.btnMoveBuffSkillUp.TabIndex = 9;
-            this.btnMoveBuffSkillUp.Text = "5";
-            this.btnMoveBuffSkillUp.UseVisualStyleBackColor = true;
-            this.btnMoveBuffSkillUp.Click += new System.EventHandler(this.btnMoveBuffSkillUp_Click);
+            btnMoveBuffSkillUp.Color = System.Drawing.Color.Transparent;
+            btnMoveBuffSkillUp.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnMoveBuffSkillUp.Location = new System.Drawing.Point(327, 57);
+            btnMoveBuffSkillUp.Name = "btnMoveBuffSkillUp";
+            btnMoveBuffSkillUp.Radius = 6;
+            btnMoveBuffSkillUp.ShadowDepth = 4F;
+            btnMoveBuffSkillUp.Size = new System.Drawing.Size(24, 24);
+            btnMoveBuffSkillUp.TabIndex = 9;
+            btnMoveBuffSkillUp.Text = "5";
+            btnMoveBuffSkillUp.UseVisualStyleBackColor = true;
+            btnMoveBuffSkillUp.Click += btnMoveBuffSkillUp_Click;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.label1.Location = new System.Drawing.Point(9, 174);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(44, 15);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "Imbue:";
+            label1.ApplyGradient = false;
+            label1.AutoSize = true;
+            label1.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            label1.Gradient = (new System.Drawing.Color[] { System.Drawing.Color.Gray, System.Drawing.Color.Black });
+            label1.Location = new System.Drawing.Point(9, 174);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(44, 15);
+            label1.TabIndex = 6;
+            label1.Text = "Imbue:";
             // 
             // btnRemoveBuffSkill
             // 
-            this.btnRemoveBuffSkill.Color = System.Drawing.Color.Transparent;
-            this.btnRemoveBuffSkill.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.btnRemoveBuffSkill.Location = new System.Drawing.Point(327, 27);
-            this.btnRemoveBuffSkill.Name = "btnRemoveBuffSkill";
-            this.btnRemoveBuffSkill.Radius = 2;
-            this.btnRemoveBuffSkill.ShadowDepth = 4F;
-            this.btnRemoveBuffSkill.Size = new System.Drawing.Size(24, 24);
-            this.btnRemoveBuffSkill.TabIndex = 5;
-            this.btnRemoveBuffSkill.Text = "r";
-            this.btnRemoveBuffSkill.UseVisualStyleBackColor = true;
-            this.btnRemoveBuffSkill.Click += new System.EventHandler(this.btnRemoveBuffSkill_Click);
+            btnRemoveBuffSkill.Color = System.Drawing.Color.Transparent;
+            btnRemoveBuffSkill.Font = new System.Drawing.Font("Webdings", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            btnRemoveBuffSkill.Location = new System.Drawing.Point(327, 27);
+            btnRemoveBuffSkill.Name = "btnRemoveBuffSkill";
+            btnRemoveBuffSkill.Radius = 6;
+            btnRemoveBuffSkill.ShadowDepth = 4F;
+            btnRemoveBuffSkill.Size = new System.Drawing.Size(24, 24);
+            btnRemoveBuffSkill.TabIndex = 5;
+            btnRemoveBuffSkill.Text = "r";
+            btnRemoveBuffSkill.UseVisualStyleBackColor = true;
+            btnRemoveBuffSkill.Click += btnRemoveBuffSkill_Click;
             // 
             // tabControl1
             // 
-            this.tabControl1.Border = new System.Windows.Forms.Padding(1);
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.tabControl1.HideTabArea = false;
-            this.tabControl1.Location = new System.Drawing.Point(362, 0);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(392, 467);
-            this.tabControl1.TabIndex = 5;
+            tabControl1.Controls.Add(tabPage1);
+            tabControl1.Controls.Add(tabPage2);
+            tabControl1.Dock = System.Windows.Forms.DockStyle.Right;
+            tabControl1.ItemSize = new System.Drawing.Size(80, 24);
+            tabControl1.Location = new System.Drawing.Point(362, 0);
+            tabControl1.Name = "tabControl1";
+            tabControl1.SelectedIndex = 0;
+            tabControl1.Size = new System.Drawing.Size(392, 467);
+            tabControl1.TabIndex = 5;
             // 
             // tabPage1
             // 
-            this.tabPage1.BackColor = System.Drawing.Color.White;
-            this.tabPage1.Controls.Add(this.groupBox1);
-            this.tabPage1.Controls.Add(this.groupBox2);
-            this.tabPage1.Location = new System.Drawing.Point(4, 24);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(384, 439);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "General setup";
+            tabPage1.BackColor = System.Drawing.Color.White;
+            tabPage1.Controls.Add(groupBox1);
+            tabPage1.Controls.Add(groupBox2);
+            tabPage1.Location = new System.Drawing.Point(4, 28);
+            tabPage1.Name = "tabPage1";
+            tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            tabPage1.Size = new System.Drawing.Size(384, 435);
+            tabPage1.TabIndex = 0;
+            tabPage1.Text = "General setup";
             // 
             // tabPage2
             // 
-            this.tabPage2.BackColor = System.Drawing.Color.White;
-            this.tabPage2.Controls.Add(this.groupWarlockMode);
-            this.tabPage2.Controls.Add(this.grpMasteryLearn);
-            this.tabPage2.Controls.Add(this.groupBox3);
-            this.tabPage2.Controls.Add(this.groupBox4);
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(384, 438);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Advanced setup";
+            tabPage2.BackColor = System.Drawing.Color.White;
+            tabPage2.Controls.Add(groupWarlockMode);
+            tabPage2.Controls.Add(grpMasteryLearn);
+            tabPage2.Controls.Add(groupBox3);
+            tabPage2.Controls.Add(groupBox4);
+            tabPage2.Location = new System.Drawing.Point(4, 28);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            tabPage2.Size = new System.Drawing.Size(384, 435);
+            tabPage2.TabIndex = 1;
+            tabPage2.Text = "Advanced setup";
             // 
             // groupWarlockMode
             // 
-            this.groupWarlockMode.BackColor = System.Drawing.Color.Transparent;
-            this.groupWarlockMode.Controls.Add(this.checkWarlockMode);
-            this.groupWarlockMode.Location = new System.Drawing.Point(8, 350);
-            this.groupWarlockMode.Name = "groupWarlockMode";
-            this.groupWarlockMode.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.groupWarlockMode.Radius = 2;
-            this.groupWarlockMode.ShadowDepth = 4;
-            this.groupWarlockMode.Size = new System.Drawing.Size(367, 67);
-            this.groupWarlockMode.TabIndex = 14;
-            this.groupWarlockMode.TabStop = false;
-            this.groupWarlockMode.Text = "Warlock mode";
+            groupWarlockMode.BackColor = System.Drawing.Color.Transparent;
+            groupWarlockMode.Controls.Add(comboTeleportSkill);
+            groupWarlockMode.Controls.Add(checkUseTeleportSkill);
+            groupWarlockMode.Controls.Add(checkUseDefaultAttack);
+            groupWarlockMode.Controls.Add(checkWarlockMode);
+            groupWarlockMode.Location = new System.Drawing.Point(8, 313);
+            groupWarlockMode.Name = "groupWarlockMode";
+            groupWarlockMode.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
+            groupWarlockMode.Radius = 10;
+            groupWarlockMode.ShadowDepth = 4;
+            groupWarlockMode.Size = new System.Drawing.Size(367, 123);
+            groupWarlockMode.TabIndex = 14;
+            groupWarlockMode.TabStop = false;
+            groupWarlockMode.Text = "Advanced setup";
+            // 
+            // comboTeleportSkill
+            // 
+            comboTeleportSkill.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            comboTeleportSkill.DropDownHeight = 100;
+            comboTeleportSkill.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            comboTeleportSkill.FormattingEnabled = true;
+            comboTeleportSkill.IntegralHeight = false;
+            comboTeleportSkill.ItemHeight = 16;
+            comboTeleportSkill.Location = new System.Drawing.Point(141, 88);
+            comboTeleportSkill.Name = "comboTeleportSkill";
+            comboTeleportSkill.Radius = 5;
+            comboTeleportSkill.ShadowDepth = 4F;
+            comboTeleportSkill.Size = new System.Drawing.Size(208, 22);
+            comboTeleportSkill.TabIndex = 9;
+            comboTeleportSkill.SelectedIndexChanged += comboTeleportSkill_SelectedIndexChanged;
+            // 
+            // checkUseTeleportSkill
+            // 
+            checkUseTeleportSkill.AutoSize = true;
+            checkUseTeleportSkill.BackColor = System.Drawing.Color.Transparent;
+            checkUseTeleportSkill.Depth = 0;
+            checkUseTeleportSkill.Location = new System.Drawing.Point(15, 84);
+            checkUseTeleportSkill.Margin = new System.Windows.Forms.Padding(0);
+            checkUseTeleportSkill.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkUseTeleportSkill.Name = "checkUseTeleportSkill";
+            checkUseTeleportSkill.Ripple = true;
+            checkUseTeleportSkill.Size = new System.Drawing.Size(123, 30);
+            checkUseTeleportSkill.TabIndex = 2;
+            checkUseTeleportSkill.Text = "Use teleport skill:";
+            checkUseTeleportSkill.UseVisualStyleBackColor = false;
+            checkUseTeleportSkill.CheckedChanged += checkUseTeleportSkill_CheckedChanged;
+            // 
+            // checkUseDefaultAttack
+            // 
+            checkUseDefaultAttack.AutoSize = true;
+            checkUseDefaultAttack.BackColor = System.Drawing.Color.Transparent;
+            checkUseDefaultAttack.Depth = 0;
+            checkUseDefaultAttack.Location = new System.Drawing.Point(15, 58);
+            checkUseDefaultAttack.Margin = new System.Windows.Forms.Padding(0);
+            checkUseDefaultAttack.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkUseDefaultAttack.Name = "checkUseDefaultAttack";
+            checkUseDefaultAttack.Ripple = true;
+            checkUseDefaultAttack.Size = new System.Drawing.Size(242, 30);
+            checkUseDefaultAttack.TabIndex = 1;
+            checkUseDefaultAttack.Text = "Use normal attack if no skill is available";
+            checkUseDefaultAttack.UseVisualStyleBackColor = false;
+            checkUseDefaultAttack.CheckedChanged += checkUseDefaultAttack_CheckedChanged;
             // 
             // checkWarlockMode
             // 
-            this.checkWarlockMode.AutoSize = true;
-            this.checkWarlockMode.BackColor = System.Drawing.Color.Transparent;
-            this.checkWarlockMode.Location = new System.Drawing.Point(86, 39);
-            this.checkWarlockMode.Name = "checkWarlockMode";
-            this.checkWarlockMode.ShadowDepth = 1;
-            this.checkWarlockMode.Size = new System.Drawing.Size(162, 15);
-            this.checkWarlockMode.TabIndex = 0;
-            this.checkWarlockMode.Text = "Change target after 2 DoTs";
-            this.checkWarlockMode.UseVisualStyleBackColor = false;
-            this.checkWarlockMode.CheckedChanged += new System.EventHandler(this.checkWarlockMode_CheckedChanged);
+            checkWarlockMode.AutoSize = true;
+            checkWarlockMode.BackColor = System.Drawing.Color.Transparent;
+            checkWarlockMode.Depth = 0;
+            checkWarlockMode.Location = new System.Drawing.Point(15, 31);
+            checkWarlockMode.Margin = new System.Windows.Forms.Padding(0);
+            checkWarlockMode.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkWarlockMode.Name = "checkWarlockMode";
+            checkWarlockMode.Ripple = true;
+            checkWarlockMode.Size = new System.Drawing.Size(177, 30);
+            checkWarlockMode.TabIndex = 0;
+            checkWarlockMode.Text = "Change target after 2 DoTs";
+            checkWarlockMode.UseVisualStyleBackColor = false;
+            checkWarlockMode.CheckedChanged += checkWarlockMode_CheckedChanged;
             // 
             // grpMasteryLearn
             // 
-            this.grpMasteryLearn.BackColor = System.Drawing.Color.Transparent;
-            this.grpMasteryLearn.Controls.Add(this.checkLearnMasteryBotStopped);
-            this.grpMasteryLearn.Controls.Add(this.label4);
-            this.grpMasteryLearn.Controls.Add(this.numMasteryGap);
-            this.grpMasteryLearn.Controls.Add(this.comboLearnMastery);
-            this.grpMasteryLearn.Controls.Add(this.checkLearnMastery);
-            this.grpMasteryLearn.Location = new System.Drawing.Point(8, 229);
-            this.grpMasteryLearn.Name = "grpMasteryLearn";
-            this.grpMasteryLearn.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.grpMasteryLearn.Radius = 2;
-            this.grpMasteryLearn.ShadowDepth = 4;
-            this.grpMasteryLearn.Size = new System.Drawing.Size(367, 115);
-            this.grpMasteryLearn.TabIndex = 13;
-            this.grpMasteryLearn.TabStop = false;
-            this.grpMasteryLearn.Text = "Mastery update";
+            grpMasteryLearn.BackColor = System.Drawing.Color.Transparent;
+            grpMasteryLearn.Controls.Add(checkLearnMasteryBotStopped);
+            grpMasteryLearn.Controls.Add(label4);
+            grpMasteryLearn.Controls.Add(numMasteryGap);
+            grpMasteryLearn.Controls.Add(comboLearnMastery);
+            grpMasteryLearn.Controls.Add(checkLearnMastery);
+            grpMasteryLearn.Location = new System.Drawing.Point(8, 218);
+            grpMasteryLearn.Name = "grpMasteryLearn";
+            grpMasteryLearn.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
+            grpMasteryLearn.Radius = 10;
+            grpMasteryLearn.ShadowDepth = 4;
+            grpMasteryLearn.Size = new System.Drawing.Size(367, 89);
+            grpMasteryLearn.TabIndex = 13;
+            grpMasteryLearn.TabStop = false;
+            grpMasteryLearn.Text = "Mastery update";
             // 
             // checkLearnMasteryBotStopped
             // 
-            this.checkLearnMasteryBotStopped.AutoSize = true;
-            this.checkLearnMasteryBotStopped.BackColor = System.Drawing.Color.Transparent;
-            this.checkLearnMasteryBotStopped.Location = new System.Drawing.Point(15, 77);
-            this.checkLearnMasteryBotStopped.Name = "checkLearnMasteryBotStopped";
-            this.checkLearnMasteryBotStopped.ShadowDepth = 1;
-            this.checkLearnMasteryBotStopped.Size = new System.Drawing.Size(153, 15);
-            this.checkLearnMasteryBotStopped.TabIndex = 25;
-            this.checkLearnMasteryBotStopped.Text = "Enabled if bot is stopped";
-            this.checkLearnMasteryBotStopped.UseVisualStyleBackColor = false;
+            checkLearnMasteryBotStopped.AutoSize = true;
+            checkLearnMasteryBotStopped.BackColor = System.Drawing.Color.Transparent;
+            checkLearnMasteryBotStopped.Depth = 0;
+            checkLearnMasteryBotStopped.Location = new System.Drawing.Point(15, 56);
+            checkLearnMasteryBotStopped.Margin = new System.Windows.Forms.Padding(0);
+            checkLearnMasteryBotStopped.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkLearnMasteryBotStopped.Name = "checkLearnMasteryBotStopped";
+            checkLearnMasteryBotStopped.Ripple = true;
+            checkLearnMasteryBotStopped.Size = new System.Drawing.Size(165, 30);
+            checkLearnMasteryBotStopped.TabIndex = 25;
+            checkLearnMasteryBotStopped.Text = "Enabled if bot is stopped";
+            checkLearnMasteryBotStopped.UseVisualStyleBackColor = false;
+            checkLearnMasteryBotStopped.CheckedChanged += checkLearnMasteryBotStopped_CheckedChanged;
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.label4.Location = new System.Drawing.Point(252, 48);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(28, 15);
-            this.label4.TabIndex = 3;
-            this.label4.Text = "Gap";
+            label4.ApplyGradient = false;
+            label4.AutoSize = true;
+            label4.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            label4.Gradient = (new System.Drawing.Color[] { System.Drawing.Color.Gray, System.Drawing.Color.Black });
+            label4.Location = new System.Drawing.Point(243, 36);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(28, 15);
+            label4.TabIndex = 3;
+            label4.Text = "Gap";
             // 
             // numMasteryGap
             // 
-            this.numMasteryGap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(238)))), ((int)(((byte)(238)))), ((int)(((byte)(238)))));
-            this.numMasteryGap.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.numMasteryGap.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.numMasteryGap.Location = new System.Drawing.Point(286, 45);
-            this.numMasteryGap.Maximum = new decimal(new int[] {
-            9,
-            0,
-            0,
-            0});
-            this.numMasteryGap.Name = "numMasteryGap";
-            this.numMasteryGap.Size = new System.Drawing.Size(64, 23);
-            this.numMasteryGap.TabIndex = 2;
-            this.numMasteryGap.ValueChanged += new System.EventHandler(this.numMasteryGap_ValueChanged);
+            numMasteryGap.BackColor = System.Drawing.Color.FromArgb(238, 238, 238);
+            numMasteryGap.Font = new System.Drawing.Font("Segoe UI", 9.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            numMasteryGap.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            numMasteryGap.Location = new System.Drawing.Point(277, 32);
+            numMasteryGap.Maximum = new decimal(new int[] { 9, 0, 0, 0 });
+            numMasteryGap.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
+            numMasteryGap.MinimumSize = new System.Drawing.Size(80, 25);
+            numMasteryGap.Name = "numMasteryGap";
+            numMasteryGap.Size = new System.Drawing.Size(80, 25);
+            numMasteryGap.TabIndex = 2;
+            numMasteryGap.Value = new decimal(new int[] { 0, 0, 0, 0 });
+            numMasteryGap.ValueChanged += numMasteryGap_ValueChanged;
             // 
             // comboLearnMastery
             // 
-            this.comboLearnMastery.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.comboLearnMastery.DropDownHeight = 100;
-            this.comboLearnMastery.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboLearnMastery.FormattingEnabled = true;
-            this.comboLearnMastery.IntegralHeight = false;
-            this.comboLearnMastery.ItemHeight = 17;
-            this.comboLearnMastery.Location = new System.Drawing.Point(88, 45);
-            this.comboLearnMastery.Name = "comboLearnMastery";
-            this.comboLearnMastery.Radius = 5;
-            this.comboLearnMastery.ShadowDepth = 4F;
-            this.comboLearnMastery.Size = new System.Drawing.Size(151, 23);
-            this.comboLearnMastery.TabIndex = 1;
-            this.comboLearnMastery.SelectedIndexChanged += new System.EventHandler(this.comboLearnMastery_SelectedIndexChanged);
+            comboLearnMastery.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            comboLearnMastery.DropDownHeight = 100;
+            comboLearnMastery.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            comboLearnMastery.FormattingEnabled = true;
+            comboLearnMastery.IntegralHeight = false;
+            comboLearnMastery.ItemHeight = 17;
+            comboLearnMastery.Location = new System.Drawing.Point(91, 33);
+            comboLearnMastery.Name = "comboLearnMastery";
+            comboLearnMastery.Radius = 5;
+            comboLearnMastery.ShadowDepth = 4F;
+            comboLearnMastery.Size = new System.Drawing.Size(141, 23);
+            comboLearnMastery.TabIndex = 1;
+            comboLearnMastery.SelectedIndexChanged += comboLearnMastery_SelectedIndexChanged;
             // 
             // checkLearnMastery
             // 
-            this.checkLearnMastery.AutoSize = true;
-            this.checkLearnMastery.BackColor = System.Drawing.Color.Transparent;
-            this.checkLearnMastery.Location = new System.Drawing.Point(15, 48);
-            this.checkLearnMastery.Name = "checkLearnMastery";
-            this.checkLearnMastery.ShadowDepth = 1;
-            this.checkLearnMastery.Size = new System.Drawing.Size(65, 15);
-            this.checkLearnMastery.TabIndex = 0;
-            this.checkLearnMastery.Text = "Mastery";
-            this.checkLearnMastery.UseVisualStyleBackColor = false;
-            this.checkLearnMastery.Click += new System.EventHandler(this.checkLearnMastery_Click);
+            checkLearnMastery.AutoSize = true;
+            checkLearnMastery.BackColor = System.Drawing.Color.Transparent;
+            checkLearnMastery.Depth = 0;
+            checkLearnMastery.Location = new System.Drawing.Point(15, 29);
+            checkLearnMastery.Margin = new System.Windows.Forms.Padding(0);
+            checkLearnMastery.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkLearnMastery.Name = "checkLearnMastery";
+            checkLearnMastery.Ripple = true;
+            checkLearnMastery.Size = new System.Drawing.Size(73, 30);
+            checkLearnMastery.TabIndex = 0;
+            checkLearnMastery.Text = "Mastery";
+            checkLearnMastery.UseVisualStyleBackColor = false;
+            checkLearnMastery.CheckedChanged += checkLearnMastery_CheckedChanged;
             // 
             // groupBox3
             // 
-            this.groupBox3.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox3.Controls.Add(this.comboResurrectionSkill);
-            this.groupBox3.Controls.Add(this.checkAcceptResurrection);
-            this.groupBox3.Controls.Add(this.label3);
-            this.groupBox3.Controls.Add(this.checkResurrectParty);
-            this.groupBox3.Location = new System.Drawing.Point(8, 6);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.groupBox3.Radius = 2;
-            this.groupBox3.ShadowDepth = 4;
-            this.groupBox3.Size = new System.Drawing.Size(367, 119);
-            this.groupBox3.TabIndex = 11;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Automated resurrection";
+            groupBox3.BackColor = System.Drawing.Color.Transparent;
+            groupBox3.Controls.Add(comboResurrectionSkill);
+            groupBox3.Controls.Add(checkAcceptResurrection);
+            groupBox3.Controls.Add(label3);
+            groupBox3.Controls.Add(checkResurrectParty);
+            groupBox3.Location = new System.Drawing.Point(8, 6);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
+            groupBox3.Radius = 10;
+            groupBox3.ShadowDepth = 4;
+            groupBox3.Size = new System.Drawing.Size(367, 119);
+            groupBox3.TabIndex = 11;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Automated resurrection";
             // 
             // comboResurrectionSkill
             // 
-            this.comboResurrectionSkill.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.comboResurrectionSkill.DropDownHeight = 100;
-            this.comboResurrectionSkill.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboResurrectionSkill.FormattingEnabled = true;
-            this.comboResurrectionSkill.IntegralHeight = false;
-            this.comboResurrectionSkill.ItemHeight = 17;
-            this.comboResurrectionSkill.Location = new System.Drawing.Point(86, 32);
-            this.comboResurrectionSkill.Name = "comboResurrectionSkill";
-            this.comboResurrectionSkill.Radius = 5;
-            this.comboResurrectionSkill.ShadowDepth = 4F;
-            this.comboResurrectionSkill.Size = new System.Drawing.Size(255, 23);
-            this.comboResurrectionSkill.TabIndex = 8;
-            this.comboResurrectionSkill.SelectedIndexChanged += new System.EventHandler(this.comboResurrectionSkill_SelectedIndexChanged);
+            comboResurrectionSkill.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            comboResurrectionSkill.DropDownHeight = 100;
+            comboResurrectionSkill.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            comboResurrectionSkill.FormattingEnabled = true;
+            comboResurrectionSkill.IntegralHeight = false;
+            comboResurrectionSkill.ItemHeight = 17;
+            comboResurrectionSkill.Location = new System.Drawing.Point(86, 32);
+            comboResurrectionSkill.Name = "comboResurrectionSkill";
+            comboResurrectionSkill.Radius = 5;
+            comboResurrectionSkill.ShadowDepth = 4F;
+            comboResurrectionSkill.Size = new System.Drawing.Size(255, 23);
+            comboResurrectionSkill.TabIndex = 8;
+            comboResurrectionSkill.SelectedIndexChanged += comboResurrectionSkill_SelectedIndexChanged;
             // 
             // checkAcceptResurrection
             // 
-            this.checkAcceptResurrection.AutoSize = true;
-            this.checkAcceptResurrection.BackColor = System.Drawing.Color.Transparent;
-            this.checkAcceptResurrection.Location = new System.Drawing.Point(86, 90);
-            this.checkAcceptResurrection.Name = "checkAcceptResurrection";
-            this.checkAcceptResurrection.ShadowDepth = 1;
-            this.checkAcceptResurrection.Size = new System.Drawing.Size(153, 15);
-            this.checkAcceptResurrection.TabIndex = 9;
-            this.checkAcceptResurrection.Text = "Auto accept resurrection";
-            this.checkAcceptResurrection.UseVisualStyleBackColor = false;
-            this.checkAcceptResurrection.CheckedChanged += new System.EventHandler(this.checkAcceptResurrection_CheckedChanged);
+            checkAcceptResurrection.AutoSize = true;
+            checkAcceptResurrection.BackColor = System.Drawing.Color.Transparent;
+            checkAcceptResurrection.Depth = 0;
+            checkAcceptResurrection.Location = new System.Drawing.Point(86, 84);
+            checkAcceptResurrection.Margin = new System.Windows.Forms.Padding(0);
+            checkAcceptResurrection.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkAcceptResurrection.Name = "checkAcceptResurrection";
+            checkAcceptResurrection.Ripple = true;
+            checkAcceptResurrection.Size = new System.Drawing.Size(163, 30);
+            checkAcceptResurrection.TabIndex = 9;
+            checkAcceptResurrection.Text = "Auto accept resurrection";
+            checkAcceptResurrection.UseVisualStyleBackColor = false;
+            checkAcceptResurrection.CheckedChanged += checkAcceptResurrection_CheckedChanged;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.label3.Location = new System.Drawing.Point(26, 35);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(54, 15);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "Res. skill:";
+            label3.ApplyGradient = false;
+            label3.AutoSize = true;
+            label3.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            label3.Gradient = (new System.Drawing.Color[] { System.Drawing.Color.Gray, System.Drawing.Color.Black });
+            label3.Location = new System.Drawing.Point(26, 35);
+            label3.Name = "label3";
+            label3.Size = new System.Drawing.Size(54, 15);
+            label3.TabIndex = 0;
+            label3.Text = "Res. skill:";
             // 
             // checkResurrectParty
             // 
-            this.checkResurrectParty.AutoSize = true;
-            this.checkResurrectParty.BackColor = System.Drawing.Color.Transparent;
-            this.checkResurrectParty.Location = new System.Drawing.Point(86, 65);
-            this.checkResurrectParty.Name = "checkResurrectParty";
-            this.checkResurrectParty.ShadowDepth = 1;
-            this.checkResurrectParty.Size = new System.Drawing.Size(181, 15);
-            this.checkResurrectParty.TabIndex = 6;
-            this.checkResurrectParty.Text = "Auto resurrect party members";
-            this.checkResurrectParty.UseVisualStyleBackColor = false;
-            this.checkResurrectParty.CheckedChanged += new System.EventHandler(this.checkResurrectParty_CheckedChanged);
+            checkResurrectParty.AutoSize = true;
+            checkResurrectParty.BackColor = System.Drawing.Color.Transparent;
+            checkResurrectParty.Depth = 0;
+            checkResurrectParty.Location = new System.Drawing.Point(86, 59);
+            checkResurrectParty.Margin = new System.Windows.Forms.Padding(0);
+            checkResurrectParty.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkResurrectParty.Name = "checkResurrectParty";
+            checkResurrectParty.Ripple = true;
+            checkResurrectParty.Size = new System.Drawing.Size(193, 30);
+            checkResurrectParty.TabIndex = 6;
+            checkResurrectParty.Text = "Auto resurrect party members";
+            checkResurrectParty.UseVisualStyleBackColor = false;
+            checkResurrectParty.CheckedChanged += checkResurrectParty_CheckedChanged;
             // 
             // groupBox4
             // 
-            this.groupBox4.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox4.Controls.Add(this.checkCastBuffsDuringWalkBack);
-            this.groupBox4.Controls.Add(this.checkCastBuffsInTowns);
-            this.groupBox4.Location = new System.Drawing.Point(8, 131);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.groupBox4.Radius = 2;
-            this.groupBox4.ShadowDepth = 4;
-            this.groupBox4.Size = new System.Drawing.Size(367, 92);
-            this.groupBox4.TabIndex = 12;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Advanced buff configuration";
+            groupBox4.BackColor = System.Drawing.Color.Transparent;
+            groupBox4.Controls.Add(checkCastBuffsDuringWalkBack);
+            groupBox4.Controls.Add(checkCastBuffsInTowns);
+            groupBox4.Location = new System.Drawing.Point(8, 131);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Padding = new System.Windows.Forms.Padding(3, 10, 3, 3);
+            groupBox4.Radius = 10;
+            groupBox4.ShadowDepth = 4;
+            groupBox4.Size = new System.Drawing.Size(367, 81);
+            groupBox4.TabIndex = 12;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Advanced buff configuration";
             // 
             // checkCastBuffsDuringWalkBack
             // 
-            this.checkCastBuffsDuringWalkBack.AutoSize = true;
-            this.checkCastBuffsDuringWalkBack.BackColor = System.Drawing.Color.Transparent;
-            this.checkCastBuffsDuringWalkBack.Location = new System.Drawing.Point(86, 61);
-            this.checkCastBuffsDuringWalkBack.Name = "checkCastBuffsDuringWalkBack";
-            this.checkCastBuffsDuringWalkBack.ShadowDepth = 1;
-            this.checkCastBuffsDuringWalkBack.Size = new System.Drawing.Size(164, 15);
-            this.checkCastBuffsDuringWalkBack.TabIndex = 10;
-            this.checkCastBuffsDuringWalkBack.Text = "Cast buffs while walk-back";
-            this.checkCastBuffsDuringWalkBack.UseVisualStyleBackColor = false;
-            this.checkCastBuffsDuringWalkBack.CheckedChanged += new System.EventHandler(this.checkCastBuffsWhenWalkBack_CheckedChanged);
+            checkCastBuffsDuringWalkBack.AutoSize = true;
+            checkCastBuffsDuringWalkBack.BackColor = System.Drawing.Color.Transparent;
+            checkCastBuffsDuringWalkBack.Depth = 0;
+            checkCastBuffsDuringWalkBack.Location = new System.Drawing.Point(15, 48);
+            checkCastBuffsDuringWalkBack.Margin = new System.Windows.Forms.Padding(0);
+            checkCastBuffsDuringWalkBack.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkCastBuffsDuringWalkBack.Name = "checkCastBuffsDuringWalkBack";
+            checkCastBuffsDuringWalkBack.Ripple = true;
+            checkCastBuffsDuringWalkBack.Size = new System.Drawing.Size(173, 30);
+            checkCastBuffsDuringWalkBack.TabIndex = 10;
+            checkCastBuffsDuringWalkBack.Text = "Cast buffs while walk-back";
+            checkCastBuffsDuringWalkBack.UseVisualStyleBackColor = false;
+            checkCastBuffsDuringWalkBack.CheckedChanged += checkCastBuffsWhenWalkBack_CheckedChanged;
             // 
             // checkCastBuffsInTowns
             // 
-            this.checkCastBuffsInTowns.AutoSize = true;
-            this.checkCastBuffsInTowns.BackColor = System.Drawing.Color.Transparent;
-            this.checkCastBuffsInTowns.Location = new System.Drawing.Point(86, 34);
-            this.checkCastBuffsInTowns.Name = "checkCastBuffsInTowns";
-            this.checkCastBuffsInTowns.ShadowDepth = 1;
-            this.checkCastBuffsInTowns.Size = new System.Drawing.Size(124, 15);
-            this.checkCastBuffsInTowns.TabIndex = 10;
-            this.checkCastBuffsInTowns.Text = "Cast buffs in towns";
-            this.checkCastBuffsInTowns.UseVisualStyleBackColor = false;
-            this.checkCastBuffsInTowns.CheckedChanged += new System.EventHandler(this.checkCastBuffsInTowns_CheckedChanged);
+            checkCastBuffsInTowns.AutoSize = true;
+            checkCastBuffsInTowns.BackColor = System.Drawing.Color.Transparent;
+            checkCastBuffsInTowns.Depth = 0;
+            checkCastBuffsInTowns.Location = new System.Drawing.Point(15, 26);
+            checkCastBuffsInTowns.Margin = new System.Windows.Forms.Padding(0);
+            checkCastBuffsInTowns.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkCastBuffsInTowns.Name = "checkCastBuffsInTowns";
+            checkCastBuffsInTowns.Ripple = true;
+            checkCastBuffsInTowns.Size = new System.Drawing.Size(133, 30);
+            checkCastBuffsInTowns.TabIndex = 10;
+            checkCastBuffsInTowns.Text = "Cast buffs in towns";
+            checkCastBuffsInTowns.UseVisualStyleBackColor = false;
+            checkCastBuffsInTowns.CheckedChanged += checkCastBuffsInTowns_CheckedChanged;
             // 
             // tabControl2
             // 
-            this.tabControl2.Border = new System.Windows.Forms.Padding(1);
-            this.tabControl2.Controls.Add(this.tabPage3);
-            this.tabControl2.Controls.Add(this.tabPage4);
-            this.tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl2.HideTabArea = false;
-            this.tabControl2.Location = new System.Drawing.Point(0, 0);
-            this.tabControl2.Name = "tabControl2";
-            this.tabControl2.SelectedIndex = 0;
-            this.tabControl2.Size = new System.Drawing.Size(362, 467);
-            this.tabControl2.TabIndex = 6;
+            tabControl2.Controls.Add(tabPage3);
+            tabControl2.Controls.Add(tabPage4);
+            tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
+            tabControl2.ItemSize = new System.Drawing.Size(80, 24);
+            tabControl2.Location = new System.Drawing.Point(0, 0);
+            tabControl2.Name = "tabControl2";
+            tabControl2.SelectedIndex = 0;
+            tabControl2.Size = new System.Drawing.Size(362, 467);
+            tabControl2.TabIndex = 6;
             // 
             // tabPage3
             // 
-            this.tabPage3.BackColor = System.Drawing.Color.White;
-            this.tabPage3.Controls.Add(this.listSkills);
-            this.tabPage3.Controls.Add(this.panel1);
-            this.tabPage3.Location = new System.Drawing.Point(4, 24);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(354, 439);
-            this.tabPage3.TabIndex = 0;
-            this.tabPage3.Text = "Player skills";
+            tabPage3.BackColor = System.Drawing.Color.White;
+            tabPage3.Controls.Add(listSkills);
+            tabPage3.Controls.Add(panel1);
+            tabPage3.Location = new System.Drawing.Point(4, 28);
+            tabPage3.Name = "tabPage3";
+            tabPage3.Padding = new System.Windows.Forms.Padding(3);
+            tabPage3.Size = new System.Drawing.Size(354, 435);
+            tabPage3.TabIndex = 0;
+            tabPage3.Text = "Player skills";
             // 
             // listSkills
             // 
-            this.listSkills.BackColor = System.Drawing.Color.White;
-            this.listSkills.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.listSkills.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.colName,
-            this.colLevel});
-            this.listSkills.ContextMenuStrip = this.skillContextMenu;
-            this.listSkills.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listSkills.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.listSkills.FullRowSelect = true;
-            this.listSkills.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listSkills.Location = new System.Drawing.Point(3, 3);
-            this.listSkills.Name = "listSkills";
-            this.listSkills.Size = new System.Drawing.Size(348, 404);
-            this.listSkills.TabIndex = 5;
-            this.listSkills.UseCompatibleStateImageBehavior = false;
-            this.listSkills.View = System.Windows.Forms.View.Details;
-            this.listSkills.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listSkills_MouseDoubleClick);
+            listSkills.BackColor = System.Drawing.Color.White;
+            listSkills.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            listSkills.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { colName, colLevel });
+            listSkills.ContextMenuStrip = skillContextMenu;
+            listSkills.Dock = System.Windows.Forms.DockStyle.Fill;
+            listSkills.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            listSkills.FullRowSelect = true;
+            listSkills.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            listSkills.Location = new System.Drawing.Point(3, 3);
+            listSkills.Name = "listSkills";
+            listSkills.Size = new System.Drawing.Size(348, 392);
+            listSkills.TabIndex = 5;
+            listSkills.UseCompatibleStateImageBehavior = false;
+            listSkills.View = System.Windows.Forms.View.Details;
+            listSkills.MouseDoubleClick += listSkills_MouseDoubleClick;
             // 
             // colName
             // 
-            this.colName.Text = "Name";
-            this.colName.Width = 226;
+            colName.Text = "Name";
+            colName.Width = 226;
             // 
             // colLevel
             // 
-            this.colLevel.Text = "";
-            this.colLevel.Width = 69;
+            colLevel.Text = "";
+            colLevel.Width = 69;
             // 
             // skillContextMenu
             // 
-            this.skillContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.skillContextMenuAddAttackSkill,
-            this.toolStripSeparator1,
-            this.skillContextMenuAddBuffSkill,
-            this.toolStripSeparator2,
-            this.useToolStripMenuItem,
-            this.useToPartyMemberToolStripMenuItem});
-            this.skillContextMenu.Name = "skillContextMenu";
-            this.skillContextMenu.Size = new System.Drawing.Size(186, 126);
-            this.skillContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.skillContextMenu_Opening);
+            skillContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { skillContextMenuAddAttackSkill, toolStripSeparator1, skillContextMenuAddBuffSkill, toolStripSeparator2, useToolStripMenuItem, useToPartyMemberToolStripMenuItem });
+            skillContextMenu.Name = "skillContextMenu";
+            skillContextMenu.Size = new System.Drawing.Size(186, 104);
+            skillContextMenu.Opening += skillContextMenu_Opening;
             // 
             // skillContextMenuAddAttackSkill
             // 
-            this.skillContextMenuAddAttackSkill.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.skillContextMenuAddAttackSkill.Name = "skillContextMenuAddAttackSkill";
-            this.skillContextMenuAddAttackSkill.Size = new System.Drawing.Size(185, 22);
-            this.skillContextMenuAddAttackSkill.Text = "Add To Attacks";
-            this.skillContextMenuAddAttackSkill.Click += new System.EventHandler(this.menuAddAttack_Click);
+            skillContextMenuAddAttackSkill.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            skillContextMenuAddAttackSkill.Name = "skillContextMenuAddAttackSkill";
+            skillContextMenuAddAttackSkill.Size = new System.Drawing.Size(185, 22);
+            skillContextMenuAddAttackSkill.Text = "Add To Attacks";
+            skillContextMenuAddAttackSkill.Click += menuAddAttack_Click;
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(182, 6);
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new System.Drawing.Size(182, 6);
             // 
             // skillContextMenuAddBuffSkill
             // 
-            this.skillContextMenuAddBuffSkill.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.skillContextMenuAddBuffSkill.Name = "skillContextMenuAddBuffSkill";
-            this.skillContextMenuAddBuffSkill.Size = new System.Drawing.Size(185, 22);
-            this.skillContextMenuAddBuffSkill.Text = "Add To Buffs";
-            this.skillContextMenuAddBuffSkill.Click += new System.EventHandler(this.menuAddBuff_Click);
+            skillContextMenuAddBuffSkill.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            skillContextMenuAddBuffSkill.Name = "skillContextMenuAddBuffSkill";
+            skillContextMenuAddBuffSkill.Size = new System.Drawing.Size(185, 22);
+            skillContextMenuAddBuffSkill.Text = "Add To Buffs";
+            skillContextMenuAddBuffSkill.Click += menuAddBuff_Click;
             // 
             // toolStripSeparator2
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(182, 6);
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new System.Drawing.Size(182, 6);
             // 
             // useToolStripMenuItem
             // 
-            this.useToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.useToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.useToolStripMenuItem.Name = "useToolStripMenuItem";
-            this.useToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.useToolStripMenuItem.Text = "Use";
-            this.useToolStripMenuItem.Click += new System.EventHandler(this.useToolStripMenuItem_Click);
-            // 
-            // panel1
-            // 
-            this.panel1.BackColor = System.Drawing.Color.Transparent;
-            this.panel1.Border = new System.Windows.Forms.Padding(0, 1, 0, 0);
-            this.panel1.BorderColor = System.Drawing.Color.Transparent;
-            this.panel1.Controls.Add(this.panel2);
-            this.panel1.Controls.Add(this.checkHideLowerLevelSkills);
-            this.panel1.Controls.Add(this.checkShowAttacks);
-            this.panel1.Controls.Add(this.checkShowBuffs);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(3, 407);
-            this.panel1.Name = "panel1";
-            this.panel1.Radius = 0;
-            this.panel1.ShadowDepth = 4F;
-            this.panel1.Size = new System.Drawing.Size(348, 29);
-            this.panel1.TabIndex = 9;
-            // 
-            // panel2
-            // 
-            this.panel2.BackColor = System.Drawing.Color.Transparent;
-            this.panel2.Border = new System.Windows.Forms.Padding(0, 0, 0, 0);
-            this.panel2.BorderColor = System.Drawing.Color.Transparent;
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel2.Location = new System.Drawing.Point(0, 0);
-            this.panel2.Name = "panel2";
-            this.panel2.Radius = 1;
-            this.panel2.ShadowDepth = 4F;
-            this.panel2.Size = new System.Drawing.Size(348, 1);
-            this.panel2.TabIndex = 9;
-            // 
-            // checkHideLowerLevelSkills
-            // 
-            this.checkHideLowerLevelSkills.AutoSize = true;
-            this.checkHideLowerLevelSkills.BackColor = System.Drawing.Color.Transparent;
-            this.checkHideLowerLevelSkills.Location = new System.Drawing.Point(207, 6);
-            this.checkHideLowerLevelSkills.Name = "checkHideLowerLevelSkills";
-            this.checkHideLowerLevelSkills.ShadowDepth = 1;
-            this.checkHideLowerLevelSkills.Size = new System.Drawing.Size(135, 15);
-            this.checkHideLowerLevelSkills.TabIndex = 6;
-            this.checkHideLowerLevelSkills.Text = "Hide lower level skills";
-            this.checkHideLowerLevelSkills.UseVisualStyleBackColor = false;
-            this.checkHideLowerLevelSkills.CheckedChanged += new System.EventHandler(this.Filter_CheckedChanged);
-            // 
-            // checkShowAttacks
-            // 
-            this.checkShowAttacks.AutoSize = true;
-            this.checkShowAttacks.BackColor = System.Drawing.Color.Transparent;
-            this.checkShowAttacks.Checked = true;
-            this.checkShowAttacks.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkShowAttacks.Location = new System.Drawing.Point(8, 6);
-            this.checkShowAttacks.Name = "checkShowAttacks";
-            this.checkShowAttacks.ShadowDepth = 1;
-            this.checkShowAttacks.Size = new System.Drawing.Size(62, 15);
-            this.checkShowAttacks.TabIndex = 7;
-            this.checkShowAttacks.Text = "Attacks";
-            this.checkShowAttacks.UseVisualStyleBackColor = false;
-            this.checkShowAttacks.CheckedChanged += new System.EventHandler(this.Filter_CheckedChanged);
-            // 
-            // checkShowBuffs
-            // 
-            this.checkShowBuffs.AutoSize = true;
-            this.checkShowBuffs.BackColor = System.Drawing.Color.Transparent;
-            this.checkShowBuffs.Checked = true;
-            this.checkShowBuffs.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkShowBuffs.Location = new System.Drawing.Point(79, 6);
-            this.checkShowBuffs.Name = "checkShowBuffs";
-            this.checkShowBuffs.ShadowDepth = 1;
-            this.checkShowBuffs.Size = new System.Drawing.Size(50, 15);
-            this.checkShowBuffs.TabIndex = 8;
-            this.checkShowBuffs.Text = "Buffs";
-            this.checkShowBuffs.UseVisualStyleBackColor = false;
-            this.checkShowBuffs.CheckedChanged += new System.EventHandler(this.Filter_CheckedChanged);
-            // 
-            // tabPage4
-            // 
-            this.tabPage4.BackColor = System.Drawing.Color.White;
-            this.tabPage4.Controls.Add(this.listActiveBuffs);
-            this.tabPage4.Location = new System.Drawing.Point(4, 25);
-            this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(354, 438);
-            this.tabPage4.TabIndex = 1;
-            this.tabPage4.Text = "Active buffs";
-            // 
-            // listActiveBuffs
-            // 
-            this.listActiveBuffs.BackColor = System.Drawing.Color.White;
-            this.listActiveBuffs.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.listActiveBuffs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.colActiveName,
-            this.colActiveLevel});
-            this.listActiveBuffs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listActiveBuffs.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.listActiveBuffs.FullRowSelect = true;
-            this.listActiveBuffs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listActiveBuffs.Location = new System.Drawing.Point(3, 3);
-            this.listActiveBuffs.Name = "listActiveBuffs";
-            this.listActiveBuffs.Size = new System.Drawing.Size(348, 432);
-            this.listActiveBuffs.TabIndex = 6;
-            this.listActiveBuffs.UseCompatibleStateImageBehavior = false;
-            this.listActiveBuffs.View = System.Windows.Forms.View.Details;
-            // 
-            // colActiveName
-            // 
-            this.colActiveName.Text = "Name";
-            this.colActiveName.Width = 226;
-            // 
-            // colActiveLevel
-            // 
-            this.colActiveLevel.Text = "";
-            this.colActiveLevel.Width = 69;
+            useToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            useToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            useToolStripMenuItem.Name = "useToolStripMenuItem";
+            useToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            useToolStripMenuItem.Text = "Use";
+            useToolStripMenuItem.Click += useToolStripMenuItem_Click;
             // 
             // useToPartyMemberToolStripMenuItem
             // 
-            this.useToPartyMemberToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.useToPartyMemberToolStripMenuItem.Name = "useToPartyMemberToolStripMenuItem";
-            this.useToPartyMemberToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.useToPartyMemberToolStripMenuItem.Text = "Use to party member";
+            useToPartyMemberToolStripMenuItem.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            useToPartyMemberToolStripMenuItem.Name = "useToPartyMemberToolStripMenuItem";
+            useToPartyMemberToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            useToPartyMemberToolStripMenuItem.Text = "Use to party member";
+            // 
+            // panel1
+            // 
+            panel1.BackColor = System.Drawing.Color.Transparent;
+            panel1.Border = new System.Windows.Forms.Padding(0, 1, 0, 0);
+            panel1.BorderColor = System.Drawing.Color.Transparent;
+            panel1.Controls.Add(panel2);
+            panel1.Controls.Add(checkHideLowerLevelSkills);
+            panel1.Controls.Add(checkShowAttacks);
+            panel1.Controls.Add(checkShowBuffs);
+            panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            panel1.Location = new System.Drawing.Point(3, 395);
+            panel1.Name = "panel1";
+            panel1.Radius = 0;
+            panel1.ShadowDepth = 4F;
+            panel1.Size = new System.Drawing.Size(348, 37);
+            panel1.TabIndex = 9;
+            // 
+            // panel2
+            // 
+            panel2.BackColor = System.Drawing.Color.Transparent;
+            panel2.Border = new System.Windows.Forms.Padding(0, 0, 0, 0);
+            panel2.BorderColor = System.Drawing.Color.Transparent;
+            panel2.Dock = System.Windows.Forms.DockStyle.Top;
+            panel2.Location = new System.Drawing.Point(0, 0);
+            panel2.Name = "panel2";
+            panel2.Radius = 1;
+            panel2.ShadowDepth = 4F;
+            panel2.Size = new System.Drawing.Size(348, 1);
+            panel2.TabIndex = 9;
+            // 
+            // checkHideLowerLevelSkills
+            // 
+            checkHideLowerLevelSkills.AutoSize = true;
+            checkHideLowerLevelSkills.BackColor = System.Drawing.Color.Transparent;
+            checkHideLowerLevelSkills.Depth = 0;
+            checkHideLowerLevelSkills.Location = new System.Drawing.Point(202, 6);
+            checkHideLowerLevelSkills.Margin = new System.Windows.Forms.Padding(0);
+            checkHideLowerLevelSkills.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkHideLowerLevelSkills.Name = "checkHideLowerLevelSkills";
+            checkHideLowerLevelSkills.Ripple = true;
+            checkHideLowerLevelSkills.Size = new System.Drawing.Size(146, 30);
+            checkHideLowerLevelSkills.TabIndex = 6;
+            checkHideLowerLevelSkills.Text = "Hide lower level skills";
+            checkHideLowerLevelSkills.UseVisualStyleBackColor = false;
+            checkHideLowerLevelSkills.CheckedChanged += Filter_CheckedChanged;
+            // 
+            // checkShowAttacks
+            // 
+            checkShowAttacks.AutoSize = true;
+            checkShowAttacks.BackColor = System.Drawing.Color.Transparent;
+            checkShowAttacks.Checked = true;
+            checkShowAttacks.CheckState = System.Windows.Forms.CheckState.Checked;
+            checkShowAttacks.Depth = 0;
+            checkShowAttacks.Location = new System.Drawing.Point(0, 6);
+            checkShowAttacks.Margin = new System.Windows.Forms.Padding(0);
+            checkShowAttacks.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkShowAttacks.Name = "checkShowAttacks";
+            checkShowAttacks.Ripple = true;
+            checkShowAttacks.Size = new System.Drawing.Size(69, 30);
+            checkShowAttacks.TabIndex = 7;
+            checkShowAttacks.Text = "Attacks";
+            checkShowAttacks.UseVisualStyleBackColor = false;
+            checkShowAttacks.CheckedChanged += Filter_CheckedChanged;
+            // 
+            // checkShowBuffs
+            // 
+            checkShowBuffs.AutoSize = true;
+            checkShowBuffs.BackColor = System.Drawing.Color.Transparent;
+            checkShowBuffs.Checked = true;
+            checkShowBuffs.CheckState = System.Windows.Forms.CheckState.Checked;
+            checkShowBuffs.Depth = 0;
+            checkShowBuffs.Location = new System.Drawing.Point(83, 6);
+            checkShowBuffs.Margin = new System.Windows.Forms.Padding(0);
+            checkShowBuffs.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkShowBuffs.Name = "checkShowBuffs";
+            checkShowBuffs.Ripple = true;
+            checkShowBuffs.Size = new System.Drawing.Size(57, 30);
+            checkShowBuffs.TabIndex = 8;
+            checkShowBuffs.Text = "Buffs";
+            checkShowBuffs.UseVisualStyleBackColor = false;
+            checkShowBuffs.CheckedChanged += Filter_CheckedChanged;
+            // 
+            // tabPage4
+            // 
+            tabPage4.BackColor = System.Drawing.Color.White;
+            tabPage4.Controls.Add(listActiveBuffs);
+            tabPage4.Location = new System.Drawing.Point(4, 28);
+            tabPage4.Name = "tabPage4";
+            tabPage4.Padding = new System.Windows.Forms.Padding(3);
+            tabPage4.Size = new System.Drawing.Size(354, 435);
+            tabPage4.TabIndex = 1;
+            tabPage4.Text = "Active buffs";
+            // 
+            // listActiveBuffs
+            // 
+            listActiveBuffs.BackColor = System.Drawing.Color.White;
+            listActiveBuffs.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            listActiveBuffs.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { colActiveName, colActiveLevel });
+            listActiveBuffs.Dock = System.Windows.Forms.DockStyle.Fill;
+            listActiveBuffs.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            listActiveBuffs.FullRowSelect = true;
+            listActiveBuffs.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            listActiveBuffs.Location = new System.Drawing.Point(3, 3);
+            listActiveBuffs.Name = "listActiveBuffs";
+            listActiveBuffs.Size = new System.Drawing.Size(348, 429);
+            listActiveBuffs.TabIndex = 6;
+            listActiveBuffs.UseCompatibleStateImageBehavior = false;
+            listActiveBuffs.View = System.Windows.Forms.View.Details;
+            listActiveBuffs.MouseDoubleClick += listActiveBuffs_MouseDoubleClick;
+            // 
+            // colActiveName
+            // 
+            colActiveName.Text = "Name";
+            colActiveName.Width = 226;
+            // 
+            // colActiveLevel
+            // 
+            colActiveLevel.Text = "";
+            colActiveLevel.Width = 69;
             // 
             // Main
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.Controls.Add(this.tabControl2);
-            this.Controls.Add(this.tabControl1);
-            this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.Name = "Main";
-            this.Size = new System.Drawing.Size(754, 467);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.tabControl1.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.groupWarlockMode.ResumeLayout(false);
-            this.groupWarlockMode.PerformLayout();
-            this.grpMasteryLearn.ResumeLayout(false);
-            this.grpMasteryLearn.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numMasteryGap)).EndInit();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.tabControl2.ResumeLayout(false);
-            this.tabPage3.ResumeLayout(false);
-            this.skillContextMenu.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
-            this.tabPage4.ResumeLayout(false);
-            this.ResumeLayout(false);
-
+            AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            Controls.Add(tabControl2);
+            Controls.Add(tabControl1);
+            Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Name = "Main";
+            Size = new System.Drawing.Size(754, 467);
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            groupBox2.ResumeLayout(false);
+            groupBox2.PerformLayout();
+            tabControl1.ResumeLayout(false);
+            tabPage1.ResumeLayout(false);
+            tabPage2.ResumeLayout(false);
+            groupWarlockMode.ResumeLayout(false);
+            groupWarlockMode.PerformLayout();
+            grpMasteryLearn.ResumeLayout(false);
+            grpMasteryLearn.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
+            tabControl2.ResumeLayout(false);
+            tabPage3.ResumeLayout(false);
+            skillContextMenu.ResumeLayout(false);
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
+            tabPage4.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         #endregion
@@ -926,5 +1014,9 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem useToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem useToPartyMemberToolStripMenuItem;
+        private SDUI.Controls.CheckBox checkUseDefaultAttack;
+        private SDUI.Controls.CheckBox checkUseSkillsInOrder;
+        private SDUI.Controls.ComboBox comboTeleportSkill;
+        private SDUI.Controls.CheckBox checkUseTeleportSkill;
     }
 }

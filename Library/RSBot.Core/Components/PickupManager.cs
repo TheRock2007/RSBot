@@ -1,13 +1,15 @@
-﻿using RSBot.Core.Objects;
+﻿using RSBot.Core.Event;
+using RSBot.Core.Objects;
 using RSBot.Core.Objects.Spawn;
-using System.Linq;
-using RSBot.Core.Event;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RSBot.Core.Components
 {
-    public class PickupManager 
+    public class PickupManager
     {
         /// <summary>
         /// Gets or sets a value indicating whether this <see cref="PickupManager"/> is running.
@@ -58,6 +60,30 @@ namespace RSBot.Core.Components
         public static bool PickupBlueItems => PlayerConfig.Get<bool>("RSBot.Items.Pickup.Blue", true);
 
         /// <summary>
+        /// Gets or sets a value indicating whether [pickup quest items].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [pickup quest items]; otherwise, <c>false</c>.
+        /// </value>
+        public static bool PickupQuestItems => PlayerConfig.Get<bool>("RSBot.Items.Pickup.Quest", true);
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [pickup clean equips].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [pickup clean equips]; otherwise, <c>false</c>.
+        /// </value>
+        public static bool PickupAnyEquips => PlayerConfig.Get<bool>("RSBot.Items.Pickup.AnyEquips", true);
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [pickup everything].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [pickup everything]; otherwise, <c>false</c>.
+        /// </value>
+        public static bool PickupEverything => PlayerConfig.Get<bool>("RSBot.Items.Pickup.Everything", true);
+
+        /// <summary>
         /// Gets or sets a value indicating whether [use ability pet].
         /// </summary>
         /// <value>
@@ -81,25 +107,29 @@ namespace RSBot.Core.Components
         /// <param name="radius">The radius.</param>
         public static void RunPlayer(Position playerPosition, Position centerPosition, int radius = 50)
         {
-            // if the manager is busy,return
-            if ( RunningPlayerPickup )
+            if (RunningPlayerPickup)
                 return;
 
             RunningPlayerPickup = true;
-            try 
+            try
             {
-                if (!SpawnManager.TryGetEntities<SpawnedItem>( out var entities, (si) => Condition( si, centerPosition, radius )
-                    && ( !UseAbilityPet || !Game.Player.HasActiveAbilityPet || PickupFilter.Any( p => p.CodeName == si.Record.CodeName && p.PickOnlyChar ) ) ) )
+                var flag = UseAbilityPet && Game.Player.HasActiveAbilityPet;
+                if (!SpawnManager.TryGetEntities<SpawnedItem>(i => Condition(i, centerPosition, radius, flag, flag), out var entities))
                 {
-                    StopPlayerPickup();
+                    RunningPlayerPickup = false;
                     return;
                 }
 
-                EventManager.FireEvent( "OnChangeStatusText", "Picking up" );
-                foreach( var item in entities.OrderBy( item => item.Movement.Source.DistanceTo( playerPosition )/*.Take(5)*/) )
+                foreach (var item in entities.OrderBy(item => item.Movement.Source.DistanceTo(playerPosition)/*.Take(5)*/))
                 {
-                    if( !RunningPlayerPickup )
+                    if (!RunningPlayerPickup)
                         return;
+
+                    while (Game.Player.InAction)
+                        Thread.Sleep(50);
+
+                    if (item.Record.IsSpecialtyGoodBox && Game.Player.Job2SpecialtyBag.Full)
+                        continue;
 
                     //Make sure the player is at the item's location
                     //Game.Player.MoveTo(item.Movement.Source);
@@ -112,67 +142,98 @@ namespace RSBot.Core.Components
             }
             finally
             {
-                StopPlayerPickup();
+                RunningPlayerPickup = false;
             }
         }
 
-        public static void RunAbilityPet( Position centerPosition, int radius = 50 ) 
+        public static async void RunAbilityPet(Position centerPosition, int radius = 50)
         {
-            if( RunningAbilityPetPickup || !UseAbilityPet || !Game.Player.HasActiveAbilityPet )
+            if (RunningAbilityPetPickup)
                 return;
 
             RunningAbilityPetPickup = true;
-            try {
-                if( !SpawnManager.TryGetEntities<SpawnedItem>( out var entities, ( si ) => Condition( si, centerPosition, radius ) 
-                    && PickupFilter.Any( p => p.CodeName == si.Record.CodeName && !p.PickOnlyChar ) ) ) 
+
+            try
+            {
+                if (!SpawnManager.TryGetEntities<SpawnedItem>(i => Condition(i, centerPosition, radius, true), out var entities))
                 {
-                    StopAbilityPetPickup();
+                    RunningAbilityPetPickup = false;
                     return;
                 }
 
-                foreach( var item in entities.OrderBy( item => item.Movement.Source.DistanceTo( centerPosition )/*.Take(5)*/) ) {
-                    if( !RunningAbilityPetPickup )
+                foreach (var item in entities.OrderBy(item => item.Movement.Source.DistanceTo(Game.Player.AbilityPet.Position)))
+                {
+                    if (!RunningAbilityPetPickup)
                         return;
 
-                    Game.Player.AbilityPet.Pickup( item.UniqueId );
+                    if (item.Record.IsSpecialtyGoodBox && Game.Player.Job2SpecialtyBag.Full)
+                        continue;
+
+                    Game.Player.AbilityPet.Pickup(item.UniqueId);
+                    await Task.Yield();
                 }
             }
-            catch ( Exception e )
+            catch (Exception e)
             {
-                Log.Fatal( e );
+                Log.Fatal(e);
             }
-            finally 
+            finally
             {
-                StopAbilityPetPickup();
+                RunningAbilityPetPickup = false;
             }
         }
 
-        private static bool Condition( SpawnedItem e, Position centerPosition, int radius ) {
+        private static bool Condition(
+            SpawnedItem e,
+            Position centerPosition,
+            int radius,
+            bool applyPickOnlyChar = false,
+            bool pickOnlyChar = false
+        )
+        {
             var playerJid = Game.Player.JID;
 
-            if( JustPickMyItems && e.OwnerJID != playerJid )
+            if (JustPickMyItems && e.OwnerJID != playerJid)
                 return false;
 
             // Don't pickup items that still belong to another player
-            if( e.HasOwner && e.OwnerJID != playerJid )
+            if (e.HasOwner && e.OwnerJID != playerJid)
+                return false;
+
+            if (applyPickOnlyChar && e.IsBehindObstacle)
                 return false;
 
             // Check if Item is within the training area + tolerance
             const int tolerance = 15;
-            var isInside = e.Movement.Source.DistanceTo( centerPosition ) <= radius + tolerance;
-            if( !isInside )
+            var isInside = e.Movement.Source.DistanceTo(centerPosition) <= radius + tolerance;
+            if (!isInside)
                 return false;
 
-            if( PickupGold && e.Record.IsGold )
+            if (PickupGold && e.Record.IsGold && 
+                !(applyPickOnlyChar && pickOnlyChar))
                 return true;
 
-            if( PickupFilter.Any( p => p.CodeName == e.Record.CodeName ) )
+            if (PickupRareItems && (byte)e.Rarity >= 2)
                 return true;
 
-            if( PickupRareItems && ( byte )e.Rarity >= 2 )
+            if (PickupBlueItems && (byte)e.Rarity >= 1)
                 return true;
 
-            if( PickupBlueItems && ( byte )e.Rarity >= 1 )
+            if (PickupAnyEquips && e.Record.IsEquip)
+                return true;
+
+            if (PickupQuestItems && e.Record.IsQuest)
+                return true;
+
+            if (PickupEverything)
+                return true;
+
+            if (applyPickOnlyChar)
+            {
+               if(PickupFilter.Any(p => p.CodeName == e.Record.CodeName && p.PickOnlyChar == pickOnlyChar))
+                    return true;
+            }
+            else if (PickupFilter.Any(p => p.CodeName == e.Record.CodeName))
                 return true;
 
             return false;
@@ -218,15 +279,9 @@ namespace RSBot.Core.Components
         /// <summary>
         /// Stops this instance.
         /// </summary>
-        public static void StopPlayerPickup()
+        public static void Stop()
         {
             RunningPlayerPickup = false;
-        }
-
-        /// <summary>
-        /// Stops this instance AbilityPet.
-        /// </summary>
-        public static void StopAbilityPetPickup() {
             RunningAbilityPetPickup = false;
         }
     }

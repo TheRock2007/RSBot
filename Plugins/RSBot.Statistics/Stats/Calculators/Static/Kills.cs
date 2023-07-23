@@ -1,4 +1,5 @@
 ﻿using RSBot.Core;
+using RSBot.Core.Components;
 using RSBot.Core.Event;
 
 namespace RSBot.Statistics.Stats.Calculators.Static
@@ -40,7 +41,7 @@ namespace RSBot.Statistics.Stats.Calculators.Static
         /// <inheritdoc />
         public void Initialize()
         {
-            EventManager.SubscribeEvent("OnKillSelectedEnemy", OnKillEnemy);
+            EventManager.SubscribeEvent("OnKillEnemy", OnKillEnemy);
         }
 
         private void OnKillEnemy()

@@ -92,7 +92,7 @@ namespace RSBot.Core.Components
         /// Is profile exists <c>true</c>; otherwise <c>false</c>
         /// </summary>
         /// <param name="profile">The profile</param>
-        public static bool IsExists(string profile)
+        public static bool ProfileExists(string profile)
         {
             return _profiles.Any(p => p.Equals(profile, StringComparison.InvariantCultureIgnoreCase));
         }
@@ -163,17 +163,17 @@ namespace RSBot.Core.Components
         /// <returns></returns>
         public static string GetProfileConfigFileName()
         {
-            return Path.Combine(Environment.CurrentDirectory, "User", "Profiles.rs");
+            return Path.Combine(Kernel.BasePath, "User", "Profiles.rs");
         }
 
         public static string GetProfileFile(string profileName)
         {
-            return Path.Combine(Environment.CurrentDirectory, "User", $"{profileName}.rs");
+            return Path.Combine(Kernel.BasePath, "User", $"{profileName}.rs");
         }
 
         public static string GetProfileDirectory(string profileName)
         {
-            return Path.Combine(Environment.CurrentDirectory, "User", profileName);
+            return Path.Combine(Kernel.BasePath, "User", profileName);
         }
     }
 }

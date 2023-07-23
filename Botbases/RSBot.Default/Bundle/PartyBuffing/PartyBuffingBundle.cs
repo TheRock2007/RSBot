@@ -65,7 +65,7 @@ namespace RSBot.Default.Bundle.PartyBuffing
                 if (buffingMember.Buffs.Count == 0)
                     continue;
 
-                EventManager.FireEvent("OnChangeStatusText", "Buffing party");
+                Log.Status("Buffing party");
 
                 var activeBuffs = member.Player.State.ActiveBuffs;
 
@@ -79,7 +79,8 @@ namespace RSBot.Default.Bundle.PartyBuffing
                     if (skill == null || skill.HasCooldown)
                         continue;
 
-                    skill.Cast(member.Player.UniqueId, buff: true);
+                    if (member.Player != null)
+                        skill.Cast(member.Player.UniqueId, buff: true);
                 }
             }
         }

@@ -23,7 +23,7 @@ namespace RSBot.Core.Objects.Spawn
         ///   <c>true</c> if [attacking player]; otherwise, <c>false</c>.
         /// </value>
         public bool AttackingPlayer { get; private set; }
-
+        
         /// <summary>
         /// Gets or sets a value indicating whether this instance has health.
         /// </summary>
@@ -39,7 +39,7 @@ namespace RSBot.Core.Objects.Spawn
         /// The health.
         /// </value>
         public int Health { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the bad effect.
         /// </summary>
@@ -148,8 +148,22 @@ namespace RSBot.Core.Objects.Spawn
             var packet = new Packet(0x704B);
             packet.WriteUInt(UniqueId);
 
-            var awaitResult = new AwaitCallback(response => response.ReadByte() == 1 ?
-                AwaitCallbackResult.Success : AwaitCallbackResult.ConditionFailed, 0xB04B);
+            var awaitResult = new AwaitCallback(response => 
+            {
+                var successFlag = response.ReadByte();
+
+                if (successFlag == 2)
+                {
+                    var errorCode = response.ReadUShort();
+
+                    Log.Debug($"Error deselecting Entity {UniqueId} [Code={errorCode:X4}]");
+
+                    return AwaitCallbackResult.Fail;
+                }
+
+                return AwaitCallbackResult.Success;
+
+            }, 0xB04B);
 
             PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
             awaitResult.AwaitResponse();
@@ -163,7 +177,7 @@ namespace RSBot.Core.Objects.Spawn
         /// <returns></returns>
         public List<SpawnedBionic> GetAttackers()
         {
-            return !SpawnManager.TryGetEntities<SpawnedBionic>(out var attackers, e => e.TargetId == UniqueId) ? null : attackers.ToList();
+            return !SpawnManager.TryGetEntities<SpawnedBionic>(e => e.TargetId == UniqueId, out var attackers) ? null : attackers.ToList();
         }
     }
 }

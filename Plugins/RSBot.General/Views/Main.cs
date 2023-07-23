@@ -2,6 +2,7 @@
 using RSBot.Core.Client;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
+using RSBot.General.Components;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -28,6 +29,9 @@ namespace RSBot.General.Views
 
             InitializeComponent();
             SubscribeEvents();
+
+            //btnStartClient.SetUseAsync(true);
+            //btnStartClientless.SetUseAsync(true);
         }
 
         /// <summary>
@@ -51,7 +55,7 @@ namespace RSBot.General.Views
 
         private void OnProfileChanged()
         {
-            Components.Accounts.Load();
+            Accounts.Load();
             LoadAccounts();
         }
 
@@ -60,6 +64,7 @@ namespace RSBot.General.Views
         /// </summary>
         private void OnGatewayServerDisconnected()
         {
+            AutoLogin.Pending = false;
             View.PendingWindow?.Hide();
 
             if (!Kernel.Proxy.IsConnectedToAgentserver)
@@ -69,7 +74,7 @@ namespace RSBot.General.Views
                 btnStartClient.Enabled = true;
                 btnStartClientless.Enabled = true;
                 btnStartClientless.Text = LanguageManager.GetLang("Start") + " Clientless";
-
+                Log.StatusLang("Ready");
                 Kernel.Proxy.Shutdown();
             }
         }
@@ -82,7 +87,7 @@ namespace RSBot.General.Views
             comboBoxClientType.Items.AddRange(Enum.GetNames(typeof(GameClientType)));
             comboCharacter.SelectedIndex = 0;
 
-            Components.Accounts.Load();
+            Accounts.Load();
             LoadAccounts();
 
             //Load and display config
@@ -97,6 +102,20 @@ namespace RSBot.General.Views
             txtStaticCaptcha.Text = GlobalConfig.Get<string>("RSBot.General.StaticCaptcha");
             checkEnableLoginDelay.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableLoginDelay");
             numLoginDelay.Value = GlobalConfig.Get("RSBot.General.LoginDelay", 10);
+            checkHideClient.Checked = GlobalConfig.Get<bool>("RSBot.General.HideOnStartClient");
+            checkCharAutoSelect.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelect");
+            radioAutoSelectFirst.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectFirst");
+            radioAutoSelectHigher.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectHigher");
+            checkAutoHidePendingWindow.Checked = GlobalConfig.Get<bool>("RSBot.General.AutoHidePendingWindow");
+            checkEnableQueueLogs.Checked = GlobalConfig.Get<bool>("RSBot.General.PendingEnableQueueLogs");
+            checkEnableQueueNotification.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableQueueNotification");
+            numQueueLeft.Value = GlobalConfig.Get("RSBot.General.QueueLeft", 30);
+
+            if (GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelect"))
+            {
+                radioAutoSelectFirst.Enabled = true;
+                radioAutoSelectHigher.Enabled = true;
+            }
 
             comboBoxClientType.SelectedIndex = (int)Game.ClientType;
 
@@ -123,7 +142,7 @@ namespace RSBot.General.Views
             comboAccounts.Items.Add(LanguageManager.GetLang("NoSelected"));
 
             var autoLoginUserName = GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername");
-            foreach (var account in Components.Accounts.SavedAccounts)
+            foreach (var account in Accounts.SavedAccounts)
             {
                 var index = comboAccounts.Items.Add(account);
                 if (account.Username == autoLoginUserName)
@@ -164,13 +183,17 @@ namespace RSBot.General.Views
         /// <summary>
         /// Starts the client process.
         /// </summary>
-        private async void StartClientProcess()
+        private async Task StartClientProcess()
         {
+            btnStartClient.Enabled = false;
             Game.Start();
 
-            var startedResult = await ClientManager.Start().ConfigureAwait(false);
-            if (!startedResult)
-                Log.WarnLang("ClientStartingError");
+            await Task.Run(async () =>
+            {
+                var startedResult = await ClientManager.Start();
+                if (!startedResult)
+                    Log.WarnLang("ClientStartingError");
+            });
         }
 
         /// <summary>
@@ -181,6 +204,10 @@ namespace RSBot.General.Views
             btnStartClient.Enabled = false;
             btnStartClientless.Enabled = false;
             _clientVisible = true;
+            btnClientHideShow.Enabled = true;
+
+            if (GlobalConfig.Get<bool>("RSBot.General.HideOnStartClient"))
+                ClientManager.SetVisible(false);
         }
 
         /// <summary>
@@ -188,26 +215,27 @@ namespace RSBot.General.Views
         /// </summary>
         private void OnExitClient()
         {
+            Log.StatusLang("Ready");
             _clientVisible = false;
             btnStartClient.Text = LanguageManager.GetLang("Start") + " Client";
 
             if (Game.Clientless)
                 return;
 
+            btnStartClient.Enabled = true;
             btnStartClientless.Enabled = true;
             btnClientHideShow.Enabled = false;
 
             if (!GlobalConfig.Get<bool>("RSBot.General.StayConnected"))
             {
-                btnStartClient.Enabled = true;
                 Kernel.Proxy.Shutdown();
             }
             else
             {
-                btnStartClient.Enabled = false;
-
                 if (!Kernel.Proxy.IsConnectedToAgentserver)
                     return;
+
+                btnStartClient.Enabled = false;
 
                 ClientlessManager.GoClientless();
 
@@ -267,7 +295,7 @@ namespace RSBot.General.Views
         /// <summary>
         /// Called when [agent server disconnected].
         /// </summary>
-        private void OnAgentServerDisconnected()
+        private async void OnAgentServerDisconnected()
         {
             Kernel.Bot.Stop();
 
@@ -276,16 +304,19 @@ namespace RSBot.General.Views
                 return;
 
             // If user disconnected with manual from clientless, we dont need open the client automatically again.
-            if (!Kernel.Proxy.ClientConnected)
-                return;
+            //if (!Kernel.Proxy.ClientConnected)
+            //return;
 
             ClientManager.Kill();
 
             if (GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin"))
             {
+                btnStartClient.Enabled = false;
+                btnStartClientless.Enabled = false;
+
                 Thread.Sleep(2000);
 
-                StartClientProcess();
+                await StartClientProcess().ConfigureAwait(false);
                 return;
             }
 
@@ -426,6 +457,8 @@ namespace RSBot.General.Views
             if (comboAccounts.SelectedIndex == 0)
                 return;
 
+            checkCharAutoSelect.Enabled = comboCharacter.SelectedIndex == 0;
+
             var selectedAccount = comboAccounts.SelectedItem as Models.Account;
             if (selectedAccount == null)
                 return;
@@ -466,46 +499,48 @@ namespace RSBot.General.Views
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private void btnStartClientless_Click(object sender, EventArgs e)
+        private async void btnStartClientless_Click(object sender, EventArgs e)
         {
-            if (!Game.Clientless)
+            await Task.Run(() =>
             {
-                if (!checkEnableAutoLogin.Checked || comboAccounts.SelectedIndex <= 0)
+                if (!Game.Clientless)
                 {
-                    var msgBoxTitle = LanguageManager.GetLang("StartClientlessMsgBoxTitle");
-                    var msgBoxContent = LanguageManager.GetLang("StartClientlessMsgBoxContent");
+                    if (!checkEnableAutoLogin.Checked || comboAccounts.SelectedIndex <= 0)
+                    {
+                        var msgBoxTitle = LanguageManager.GetLang("StartClientlessMsgBoxTitle");
+                        var msgBoxContent = LanguageManager.GetLang("StartClientlessMsgBoxContent");
 
-                    MessageBox.Show(msgBoxContent, msgBoxTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(msgBoxContent, msgBoxTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                    return;
+                        return;
+                    }
+
+                    btnStartClient.Enabled = false;
+                    btnClientHideShow.Enabled = false;
+
+                    Game.Clientless = true;
+                    Log.StatusLang("StartingClientless");
+                    btnStartClientless.Text = LanguageManager.GetLang("Disconnect");
+                    Game.Start();
                 }
+                else
+                {
+                    var msgBoxTitle = LanguageManager.GetLang("MsgBoxDisconnectDialogTitle");
+                    var msgBoxContent = LanguageManager.GetLang("MsgBoxDisconnectDialogContent");
 
-                btnStartClient.Enabled = false;
-                btnClientHideShow.Enabled = false;
+                    var result = MessageBox.Show(msgBoxContent, msgBoxTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.No)
+                        return;
 
-                Game.Clientless = true;
-                BotWindow.SetStatusTextLang("StartingClientless");
-                Game.Start();
+                    Game.Clientless = false;
 
-                btnStartClientless.Text = LanguageManager.GetLang("Disconnect");
-            }
-            else
-            {
-                var msgBoxTitle = LanguageManager.GetLang("MsgBoxDisconnectDialogTitle");
-                var msgBoxContent = LanguageManager.GetLang("MsgBoxDisconnectDialogContent");
+                    btnStartClient.Enabled = true;
+                    btnStartClientless.Enabled = true;
+                    btnStartClientless.Text = LanguageManager.GetLang("Start") + " Clientless";
 
-                var result = MessageBox.Show(msgBoxContent, msgBoxTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (result == DialogResult.No)
-                    return;
-
-                Game.Clientless = false;
-
-                btnStartClient.Enabled = true;
-                btnStartClientless.Enabled = true;
-                btnStartClientless.Text = LanguageManager.GetLang("Start") + " Clientless";
-
-                Kernel.Proxy.Shutdown();
-            }
+                    Kernel.Proxy.Shutdown();
+                }
+            });
         }
 
         /// <summary>
@@ -621,6 +656,114 @@ namespace RSBot.General.Views
         private void numLoginDelay_ValueChanged(object sender, EventArgs e)
         {
             GlobalConfig.Set("RSBot.General.LoginDelay", numLoginDelay.Value);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkHideClient control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkHideClient_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.HideOnStartClient", checkHideClient.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkCharAutoSelect control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkCharAutoSelect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelect"))
+            {
+                radioAutoSelectFirst.Enabled = true;
+                radioAutoSelectHigher.Enabled = true;
+            }
+            else
+            {
+                radioAutoSelectFirst.Enabled = false;
+                radioAutoSelectHigher.Enabled = false;
+            }
+
+
+            GlobalConfig.Set("RSBot.General.CharacterAutoSelect", checkCharAutoSelect.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the radioAutoSelectFirst control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void radioAutoSelectFirst_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.CharacterAutoSelectFirst", radioAutoSelectFirst.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the radioAutoSelectHigher control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void radioAutoSelectHigher_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.CharacterAutoSelectHigher", radioAutoSelectHigher.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkDontShowPendingOnStartClient control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkDontShowPendingOnStartClient_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.AutoHidePendingWindow", checkAutoHidePendingWindow.Checked);
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkEnableQuequeLogs control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkEnableQueueLogs_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.PendingEnableQueueLogs", checkEnableQueueLogs.Checked);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the btnShowPending control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnShowPending_Click(object sender, EventArgs e)
+        {
+            if (!AutoLogin.Pending)
+                return;
+
+            if (View.PendingWindow?.Visible == false)
+                View.PendingWindow.ShowAtTop(View.Instance);
+            else
+                View.PendingWindow.Hide();
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the checkEnableQueueNotification control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkEnableQueueNotification_CheckedChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.EnableQueueNotification", checkEnableQueueNotification.Checked);
+        }
+
+        /// <summary>
+        /// Handles the ValueChanged event of the numQuequeLeft control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void numQueueLeft_ValueChanged(object sender, EventArgs e)
+        {
+            GlobalConfig.Set("RSBot.General.QueueLeft", numQueueLeft.Value);
         }
     }
 }

@@ -90,7 +90,13 @@ namespace RSBot.Alchemy.Views
                 ControlStyles.OptimizedDoubleBuffer,
                 true);
 
-            EventManager.SubscribeEvent("OnLoadCharacter", () => { Invoke(ReloadItemList); });
+            EventManager.SubscribeEvent("OnLoadCharacter", () =>
+            {
+                if (IsDisposed || Disposing)
+                    return;
+
+                ReloadItemList();
+            });
 
             EventManager.SubscribeEvent("OnAlchemy", new Action<AlchemyType>(OnAlchemy));
 
@@ -109,7 +115,10 @@ namespace RSBot.Alchemy.Views
 
         private void OnAlchemy(AlchemyType type)
         {
-            Invoke(ReloadItemList);
+            if (IsDisposed || Disposing)
+                return;
+
+            ReloadItemList();
         }
 
         /// <summary>

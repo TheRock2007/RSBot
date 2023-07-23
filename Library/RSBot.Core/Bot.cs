@@ -36,7 +36,7 @@ namespace RSBot.Core
         public void SetBotbase(IBotbase botBase)
         {
             Botbase = botBase;
-            Botbase.Initialize();
+            //Botbase.Initialize();
 
             EventManager.FireEvent("OnSetBotbase", botBase);
         }
@@ -50,7 +50,7 @@ namespace RSBot.Core
                 return;
 
             TokenSource = new CancellationTokenSource();
-
+        
             Task.Factory.StartNew(async (e) => 
             {
                 Running = true;
@@ -60,6 +60,9 @@ namespace RSBot.Core
 
                 while (!TokenSource.IsCancellationRequested)
                 {
+                    if (!Game.Ready)
+                        continue;
+
                     Botbase.Tick();
                     await Task.Delay(100);
                 }
@@ -72,6 +75,10 @@ namespace RSBot.Core
         /// </summary>
         public void Stop()
         {
+            ScriptManager.Stop();
+            ShoppingManager.Stop();
+            PickupManager.Stop();
+
             if (Botbase == null)
                 return;
 
@@ -82,18 +89,14 @@ namespace RSBot.Core
                 TokenSource.Cancel();
 
             EventManager.FireEvent("OnStopBot");
-            Log.Notify($"Stopping bot {Botbase.Info.Name}");
+            Log.Notify($"Stopping bot {Botbase.Name}");
 
             Game.SelectedEntity = null;
-            ScriptManager.Stop();
-            ShoppingManager.Stop();
-            PickupManager.StopPlayerPickup();
-            PickupManager.StopAbilityPetPickup();
             Botbase.Stop();
-
             Running = false;
 
-            Log.Notify($"Stoped bot {Botbase.Info.Name}");
+            Log.Notify($"Stoped bot {Botbase.Name}");
+            Log.Status("Bot stopped");
         }
     }
 }

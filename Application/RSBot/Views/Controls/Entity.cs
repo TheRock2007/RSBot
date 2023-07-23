@@ -1,14 +1,13 @@
 ﻿using RSBot.Core;
+using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Extensions;
 using RSBot.Core.Objects.Spawn;
 using System;
-using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace RSBot.Views.Controls
 {
-    [ToolboxItem(false)]
     public partial class Entity : UserControl
     {
         public Entity()
@@ -25,7 +24,7 @@ namespace RSBot.Views.Controls
         {
             EventManager.SubscribeEvent("OnSelectEntity", new Action<SpawnedBionic>(OnSelectEntity));
             EventManager.SubscribeEvent("OnDeselectEntity", OnDeselectEntity);
-            EventManager.SubscribeEvent("OnUpdateSelectedEntityHP", new Action<SpawnedBionic>(OnUpdateSelectedEntityHP));
+            EventManager.SubscribeEvent("OnUpdateEntityHp", new Action<SpawnedBionic>(OnUpdateEntityHp));
             EventManager.SubscribeEvent("OnKillSelectedEnemy", OnKillSelectedEnemy);
             EventManager.SubscribeEvent("OnAgentServerDisconnected", OnAgentServerDisconnected);
             EventManager.SubscribeEvent("OnInitialized", OnInitialized);
@@ -58,14 +57,20 @@ namespace RSBot.Views.Controls
             {
                 progressHP.Value = 100;
                 progressHP.Maximum = 100;
+
+                if (Game.Player.State.DialogState is { IsInDialog: true })
+                    lblType.Text = "<in conversation>";
             }
         }
 
         /// <summary>
         /// Core_s the on update selected entity hp.
         /// </summary>
-        private void OnUpdateSelectedEntityHP(SpawnedBionic entity)
+        private void OnUpdateEntityHp(SpawnedBionic entity)
         {
+            if (Game.SelectedEntity?.UniqueId != entity.UniqueId)
+                return;
+
             if (!entity.HasHealth)
             {
                 progressHP.Value = 100;

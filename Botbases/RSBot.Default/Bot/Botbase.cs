@@ -1,7 +1,7 @@
 ﻿using RSBot.Core;
 using RSBot.Core.Components;
+using RSBot.Core.Event;
 using RSBot.Core.Objects;
-using RSBot.Default.Bot.Objects;
 using RSBot.Default.Bundle;
 using System;
 using System.Threading;
@@ -16,14 +16,14 @@ namespace RSBot.Default.Bot
         /// <value>
         /// The area.
         /// </value>
-        public TrainingArea Area { get; private set; }
+        public Area Area { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Botbase" /> class.
         /// </summary>
         public Botbase()
         {
-            Reload();
+            EventManager.SubscribeEvent("OnSetTrainingArea", Reload);
         }
 
         /// <summary>
@@ -31,11 +31,13 @@ namespace RSBot.Default.Bot
         /// </summary>
         public void Reload()
         {
-            Area = new TrainingArea
+            Area = new Area
             {
                 Position = new Position(
+                    PlayerConfig.Get<ushort>("RSBot.Area.Region"),
                     PlayerConfig.Get<float>("RSBot.Area.X"),
-                    PlayerConfig.Get<float>("RSBot.Area.Y")),
+                    PlayerConfig.Get<float>("RSBot.Area.Y"),
+                    PlayerConfig.Get<float>("RSBot.Area.Z")),
                 Radius = Math.Clamp(PlayerConfig.Get<int>("RSBot.Area.Radius", 50), 5, 100)
             };
         }
@@ -62,6 +64,9 @@ namespace RSBot.Default.Bot
             }
 
             var noAttack = PlayerConfig.Get("RSBot.Skills.NoAttack", false);
+
+            //Check for protection
+            Bundles.Protection.Invoke();
 
             //Cast buffs
             Bundles.Buff.Invoke();

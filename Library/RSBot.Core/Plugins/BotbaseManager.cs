@@ -15,7 +15,7 @@ namespace RSBot.Core.Plugins
         /// <value>
         /// The extension directory.
         /// </value>
-        public string DirectoryPath => Path.Combine(Environment.CurrentDirectory, "Data", "Bots");
+        public string DirectoryPath => Path.Combine(Kernel.BasePath, "Data", "Bots");
 
         /// <summary>
         /// Gets the extensions.
@@ -46,7 +46,9 @@ namespace RSBot.Core.Plugins
                                           select extension)
                 {
                     Bots.Add(extension.Key, extension.Value);
-                    Log.Debug($"Loaded botbase [{extension.Value.Info.Name}]");
+                    extension.Value.Register();
+
+                    Log.Debug($"Loaded botbase [{extension.Value.Name}]");
                 }
 
                 EventManager.FireEvent("OnLoadBotbases");
@@ -55,7 +57,7 @@ namespace RSBot.Core.Plugins
             }
             catch (Exception ex)
             {
-                File.WriteAllText(Environment.CurrentDirectory + "\\boot-error.log", $"The botbase manager encountered a problem: \n{ex.Message} at {ex.StackTrace}");
+                File.WriteAllText(Kernel.BasePath + "\\boot-error.log", $"The botbase manager encountered a problem: \n{ex.Message} at {ex.StackTrace}");
                 return false;
             }
         }
@@ -77,7 +79,7 @@ namespace RSBot.Core.Plugins
 
                 foreach (var extension in (from type in types where type.IsPublic && !type.IsAbstract && type.GetInterface("IBotbase") != null select Activator.CreateInstance(type)).OfType<IBotbase>())
                 {
-                    result.Add(extension.Info.Name, extension);
+                    result.Add(extension.Name, extension);
                 }
             }
             catch { /* ignore, it's an invalid botbase */ }

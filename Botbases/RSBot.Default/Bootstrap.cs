@@ -2,10 +2,8 @@
 using RSBot.Core.Components;
 using RSBot.Core.Objects;
 using RSBot.Core.Plugins;
-using RSBot.Default.Bot;
 using RSBot.Default.Bundle;
 using RSBot.Default.Components;
-using RSBot.Default.Views;
 using System;
 using System.Windows.Forms;
 
@@ -13,18 +11,13 @@ namespace RSBot.Default
 {
     public class Bootstrap : IBotbase
     {
-        /// <summary>
-        /// Gets or sets the information.
-        /// </summary>
-        /// <value>
-        /// The information.
-        /// </value>
-        public BotbaseInfo Info => new()
-        {
-            Name = "RSBot.Default",
-            DisplayName = "Training",
-            TabText = "Training"
-        };
+        public string Name => "RSBot.Default";
+
+        public string DisplayName => "Training";
+
+        public string TabText => DisplayName;
+
+        public Area Area => Container.Bot.Area;
 
         /// <summary>
         /// Ticks this instance. It's the botbase main-loop
@@ -43,6 +36,10 @@ namespace RSBot.Default
             if (Game.Player.State.LifeState == LifeState.Dead)
                 return;
 
+            //Begin the loopback if needed
+            if (Container.Bot.Area.Position.DistanceToPlayer() > 80)
+                Bundles.Loop.Start();
+
             if (Bundles.Loop.Running)
                 return;
 
@@ -50,14 +47,14 @@ namespace RSBot.Default
             if (Game.Player.State.ScrollState == ScrollState.NormalScroll ||
                 Game.Player.State.ScrollState == ScrollState.ThiefScroll)
                 return;
-
+            
             try
             {
                 Container.Bot.Tick();
             }
             catch (Exception ex)
             {
-                Log.Debug($"An exception was thrown in the bot loop: {ex} {Environment.NewLine}------------------------------------------------------");
+                Log.Fatal(ex);
             }
         }
 
@@ -65,32 +62,14 @@ namespace RSBot.Default
         /// Gets the view.
         /// </summary>
         /// <returns></returns>
-        public Control GetView()
-        {
-            return Container.View ?? (Container.View = new Main());
-        }
-
-        /// <summary>
-        /// Initializes this instance.
-        /// </summary>
-        /// <exception cref="System.NotImplementedException"></exception>
-        public void Initialize()
-        {
-            Container.Lock = new object();
-            Subscriber.ConfigSubscriber.SubscribeEvents();
-            Subscriber.TeleportSubscriber.SubscribeEvents();
-
-            ScriptManager.CommandHandlers.Add(new TrainingAreaScriptCommand());
-        }
+        public Control View => Container.View;
 
         /// <summary>
         /// Starts this instance.
         /// </summary>
         public void Start()
         {
-            var x = PlayerConfig.Get<float>("RSBot.Area.X", 0);
-            var y = PlayerConfig.Get<float>("RSBot.Area.Y", 0);
-            if (x == 0 && y == 0)
+            if (Kernel.Bot.Botbase.Area.Position.X == 0)
             {
                 Log.WarnLang("ConfigureTrainingAreaBeforeStartBot");
                 Kernel.Bot.Stop();
@@ -98,12 +77,9 @@ namespace RSBot.Default
                 return;
             }
 
-            Bundles.Reload();
-            Container.Bot = new Botbase();
-
-            //Begin the loopback
-            if (Container.Bot.Area.Position.DistanceTo(Game.Player.Movement.Source) > 80)
-                Bundles.Loop.Start(); //Task.Run(() => { Bundles.Loop.Start(); });
+            //Already reloading when config saved via ConfigSubscriber
+            //Bundles.Reload();
+            //Container.Bot.Reload();
         }
 
         /// <summary>
@@ -121,12 +97,30 @@ namespace RSBot.Default
         }
 
         /// <summary>
+        /// Always initialize the botbase so other botbases can make use of its otherwise internal features.
+        /// </summary>
+        public void Register()
+        {
+            Container.Lock = new();
+            Container.Bot = new();
+
+            Bundles.Reload();
+
+            Subscriber.BundleSubscriber.SubscribeEvents();
+            Subscriber.ConfigSubscriber.SubscribeEvents();
+            Subscriber.TeleportSubscriber.SubscribeEvents();
+
+            ScriptManager.CommandHandlers.Add(new TrainingAreaScriptCommand());
+            Log.Debug("[Training] Botbase registered to the kernel!");
+        }
+
+        /// <summary>
         /// Translate the botbase plugin
         /// </summary>
         /// <param name="language">The language</param>
         public void Translate()
         {
-            LanguageManager.Translate(GetView(), Kernel.Language);
+            LanguageManager.Translate(View, Kernel.Language);
         }
     }
 }

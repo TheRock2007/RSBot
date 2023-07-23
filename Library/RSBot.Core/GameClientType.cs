@@ -11,6 +11,8 @@
         Chinese,
         Global,
         Turkey,
-        Korean
+        VTC_Game,
+        Korean,
+        Rigid
     }
 }

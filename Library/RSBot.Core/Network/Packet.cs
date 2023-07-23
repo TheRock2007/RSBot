@@ -8,8 +8,10 @@ namespace RSBot.Core.Network
 {
     public class Packet
     {
-        public const int DEFAULT_CODEPAGE = 65001; //1254
-        public static readonly Encoding Encoding = Encoding.UTF8; // Encoding.GetEncoding(DEFAULT_CODEPAGE)
+        /// <summary>
+        /// UTF-8
+        /// </summary>
+        public const int DEFAULT_CODEPAGE = 65001;
 
         private PacketWriter _writer;
         private PacketReader _reader;
@@ -1044,6 +1046,24 @@ namespace RSBot.Core.Network
 
                 var bytes = Encoding.GetEncoding(codePage).GetBytes(value);
                 _writer.Write((ushort)bytes.Length);
+                _writer.Write(bytes);
+            }
+        }
+
+        /// <summary>
+        /// Writes the ASCII.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="codePage">The Codepage.</param>
+        public void WriteStringUTF8(string value)
+        {
+            lock (_lock)
+            {
+                if (Locked)
+                    throw new PacketException(this, "Cannot Write to a locked Packet.");
+
+                var bytes = Encoding.UTF8.GetBytes(value);
+                _writer.Write((byte)bytes.Length);
                 _writer.Write(bytes);
             }
         }

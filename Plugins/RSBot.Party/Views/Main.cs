@@ -1,4 +1,5 @@
 ﻿using RSBot.Core;
+using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Extensions;
 using RSBot.Core.Objects.Party;
@@ -93,7 +94,7 @@ namespace RSBot.Party.Views
 
             var mastery1 = Game.ReferenceManager.GetRefSkillMastery(member.MasteryId1);
             var mastery2 = Game.ReferenceManager.GetRefSkillMastery(member.MasteryId2);
-            var location = Game.ReferenceManager.GetTranslation(member.Position.RegionId.ToString());
+            var location = Game.ReferenceManager.GetTranslation(member.Position.Region.ToString());
 
             var masteryInfo = _none;
             if (mastery1 != null)
@@ -237,7 +238,7 @@ namespace RSBot.Party.Views
                     listItem.SubItems.Add(party.Purpose.ToString());
                     listItem.SubItems.Add(party.MemberCount.ToString("#/" + party.Settings.MaxMember));
                     listItem.SubItems.Add(party.MinLevel + "~" + party.MaxLevel);
-                    
+
                     listItem.ToolTipText = party.Settings.ToString();
                     if (party.Leader == Game.Player.Name ||
                         party.Leader == Game.Player.JobInformation.Name ||
@@ -283,9 +284,10 @@ namespace RSBot.Party.Views
             checkBoxLeaveIfMasterNot.Checked = Bundle.Container.AutoParty.Config.LeaveIfMasterNot;
             textBoxLeaveIfMasterNotName.Text = Bundle.Container.AutoParty.Config.LeaveIfMasterNotName;
             textBoxLeaveIfMasterNotName.Enabled = !checkBoxLeaveIfMasterNot.Checked;
+            checkBoxFollowMaster.Checked = PlayerConfig.Get("RSBot.Party.AlwaysFollowPartyMaster", false);
 
             var autoPartyList = PlayerConfig.GetArray<string>("RSBot.Party.AutoPartyList");
-            foreach(var item in autoPartyList)
+            foreach (var item in autoPartyList)
                 listAutoParty.Items.Add(item);
 
             var playerList = PlayerConfig.GetArray<string>("RSBot.Party.Commands.PlayersList");
@@ -391,7 +393,7 @@ namespace RSBot.Party.Views
                     item.Group = @group;
 
                 listPartyBuffSkills.Items.Add(item);
-                
+
                 item.LoadSkillImageAsync();
             }
 
@@ -525,7 +527,7 @@ namespace RSBot.Party.Views
             lvItem.SubItems[1].Text = member.Level.ToString();
             if (string.IsNullOrWhiteSpace(member.Guild))
             {
-                lvItem.SubItems[2].Text = _noGuildText; 
+                lvItem.SubItems[2].Text = _noGuildText;
                 lvItem.SubItems[2].ForeColor = Color.DarkGray;
 
             }
@@ -537,7 +539,7 @@ namespace RSBot.Party.Views
 
             var mastery1 = Game.ReferenceManager.GetRefSkillMastery(member.MasteryId1);
             var mastery2 = Game.ReferenceManager.GetRefSkillMastery(member.MasteryId2);
-            var location = Game.ReferenceManager.GetTranslation(member.Position.RegionId.ToString());
+            var location = Game.ReferenceManager.GetTranslation(member.Position.Region.ToString());
 
             var masteryInfo = _none;
             if (mastery1 != null)
@@ -609,11 +611,11 @@ namespace RSBot.Party.Views
         private void btnAddToAutoParty_Click(object sender, System.EventArgs e)
         {
             var dialog = new InputDialog(
-                "Input", 
+                "Input",
                 LanguageManager.GetLang("CharName"),
                 LanguageManager.GetLang("EnterCharNameForPartyList"));
 
-            if (dialog.ShowDialog(this) != DialogResult.OK) 
+            if (dialog.ShowDialog(this) != DialogResult.OK)
                 return;
 
             listAutoParty.Items.Add(dialog.Value.ToString());
@@ -627,7 +629,7 @@ namespace RSBot.Party.Views
         /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
         private void btnRemoveFromAutoParty_Click(object sender, System.EventArgs e)
         {
-            if (listAutoParty.SelectedIndices.Count == 0) 
+            if (listAutoParty.SelectedIndices.Count == 0)
                 return;
 
             listAutoParty.Items.RemoveAt(listAutoParty.SelectedIndices[0]);
@@ -642,7 +644,7 @@ namespace RSBot.Party.Views
         /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
         private void checkAutoPartySetting_CheckedChanged(object sender, System.EventArgs e)
         {
-            if (!_applySettings) 
+            if (!_applySettings)
                 return;
 
             PlayerConfig.Set("RSBot.Party.AcceptAll", checkAcceptAll.Checked);
@@ -672,7 +674,7 @@ namespace RSBot.Party.Views
             if (lvPartyMatching.SelectedItems.Count != 1)
                 return;
 
-            var partyNumber = Convert.ToInt32(lvPartyMatching.SelectedItems[0].Text);
+            var partyNumber = Convert.ToUInt32(lvPartyMatching.SelectedItems[0].Text);
 
             Log.NotifyLang("JoinFormedParty", partyNumber);
 
@@ -838,8 +840,8 @@ namespace RSBot.Party.Views
                 if (skill == null)
                     continue;
 
-                if (buffingMember.Buffs.Any(id => id == skill.Id || 
-                    (Game.ReferenceManager.SkillData.TryGetValue(id, out var refSkill) && 
+                if (buffingMember.Buffs.Any(id => id == skill.Id ||
+                    (Game.ReferenceManager.SkillData.TryGetValue(id, out var refSkill) &&
                     refSkill.Action_Overlap == skill.Record.Action_Overlap)))
                     continue;
 
@@ -1021,7 +1023,7 @@ namespace RSBot.Party.Views
                 LanguageManager.GetLang("CharName"),
                 LanguageManager.GetLang("EnterCharNameForCommandList"));
 
-            if (diag.ShowDialog(this) != DialogResult.OK) 
+            if (diag.ShowDialog(this) != DialogResult.OK)
                 return;
 
             listCommandPlayers.Items.Add(diag.Value.ToString());
@@ -1030,12 +1032,47 @@ namespace RSBot.Party.Views
 
         private void buttonCommandPlayerRemove_Click(object sender, EventArgs e)
         {
-            if (listCommandPlayers.SelectedIndices.Count == 0) 
+            if (listCommandPlayers.SelectedIndices.Count == 0)
                 return;
 
             listCommandPlayers.Items.RemoveAt(listCommandPlayers.SelectedIndices[0]);
 
             SaveCommandPlayersList();
+        }
+
+        private void buttonAutoJoinConfig_Click(object sender, EventArgs e)
+        {
+            checkBoxJoinByName.Checked = PlayerConfig.Get("RSBot.Party.AutoJoin.ByName", false);
+            checkBoxJoinByTitle.Checked = PlayerConfig.Get("RSBot.Party.AutoJoin.ByTitle", false);
+            textBoxJoinByName.Text = PlayerConfig.Get("RSBot.Party.AutoJoin.Name", string.Empty);
+            textBoxJoinByTitle.Text = PlayerConfig.Get("RSBot.Party.AutoJoin.Title", string.Empty);
+            topPartyPanel.Height = 162;
+
+            buttonAutoJoinConfig.Color = ColorScheme.BackColor;
+        }
+
+        private void buttonConfirmJoinConfig_Click(object sender, EventArgs e)
+        {
+            PlayerConfig.Set("RSBot.Party.AutoJoin.ByName", checkBoxJoinByName.Checked);
+            PlayerConfig.Set("RSBot.Party.AutoJoin.ByTitle", checkBoxJoinByTitle.Checked);
+
+            if (checkBoxJoinByName.Checked)
+                PlayerConfig.Set("RSBot.Party.AutoJoin.Name", textBoxJoinByName.Text);
+
+            if (checkBoxJoinByTitle.Checked)
+                PlayerConfig.Set("RSBot.Party.AutoJoin.Title", textBoxJoinByTitle.Text);
+
+            Bundle.Container.Refresh();
+
+            buttonAutoJoinConfig.Color = Color.Transparent;
+            topPartyPanel.Height = 47;
+        }
+
+        private void checkBoxFollowMaster_CheckedChanged(object sender, EventArgs e)
+        {
+            PlayerConfig.Set("RSBot.Party.AlwaysFollowPartyMaster", checkBoxFollowMaster.Checked);
+
+            Bundle.Container.Refresh();
         }
     }
 }

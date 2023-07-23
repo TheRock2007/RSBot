@@ -1,4 +1,5 @@
 ﻿using RSBot.Core.Components;
+using RSBot.Core.Objects.Inventory;
 
 namespace RSBot.Core.Network.Hooks.Agent.Inventory
 {
@@ -30,9 +31,25 @@ namespace RSBot.Core.Network.Hooks.Agent.Inventory
             if (packet.ReadByte() != 0x01 || !ShoppingManager.Running)
                 return packet;
 
-            var type = packet.ReadByte();
+            var type = (InventoryOperation) packet.ReadByte();
+            if (type == InventoryOperation.SP_SELL_ITEM_COS)
+            {
+                var tempCosId = packet.ReadUInt(); //COS unique ID
+                var srcSlot = packet.ReadByte();
+                var response = new Packet(0xB034);
+                response.WriteByte(1); //Success
+                response.WriteByte(InventoryOperation.SP_DROP_ITEM_COS);
+                response.WriteUInt(tempCosId);
+                response.WriteByte(srcSlot);
+                
+                return response;
+            }
+            
+            var cosId = 0u;
+            if (type == InventoryOperation.SP_BUY_ITEM_COS)
+                cosId = packet.ReadUInt();
 
-            if (type != 0x08)
+            if (type != InventoryOperation.SP_BUY_ITEM && type !=  InventoryOperation.SP_BUY_ITEM_COS)
                 return packet;
 
             var tab = packet.ReadByte();
@@ -41,7 +58,8 @@ namespace RSBot.Core.Network.Hooks.Agent.Inventory
             byte[] destinationSlots = null;
             ushort amount = 0;
             byte itemAmount = 0;
-            if (Game.ClientType > GameClientType.Chinese)
+            if (Game.ClientType > GameClientType.Chinese &&
+                Game.ClientType != GameClientType.Rigid)
             {
                 amount = packet.ReadUShort();
                 itemAmount = packet.ReadByte();
@@ -76,7 +94,17 @@ namespace RSBot.Core.Network.Hooks.Agent.Inventory
 
                 var response = new Packet(0xB034);
                 response.WriteByte(0x01); //Success
-                response.WriteByte(0x06);
+
+                if (cosId == 0)
+                    response.WriteByte(InventoryOperation.SP_PICK_ITEM);
+                else
+                {
+                    if (Game.Player.JobTransport == null || cosId != Game.Player.JobTransport.UniqueId)
+                        return packet;
+
+                    response.WriteByte(InventoryOperation.SP_PICK_ITEM_COS);
+                    response.WriteUInt(cosId);
+                }
                 response.WriteByte(destination);
                 
                 if (Game.ClientType > GameClientType.Thailand)
@@ -103,8 +131,10 @@ namespace RSBot.Core.Network.Hooks.Agent.Inventory
                                 case GameClientType.Chinese:
                                 case GameClientType.Global:
                                 case GameClientType.Turkey:
+                                case GameClientType.Rigid:
                                     bindingCount = 4;
                                     break;
+                                case GameClientType.VTC_Game:
                                 case GameClientType.Korean:
                                     bindingCount = 3;
                                     break;
@@ -138,7 +168,7 @@ namespace RSBot.Core.Network.Hooks.Agent.Inventory
                         }
                         break;
 
-                    case 3: //ITEM_ETC
+                    default: //ITEM_ETC
                         response.WriteUShort(amount);
 
                         if (refItem.TypeID3 == 11) //Magic stones
@@ -149,6 +179,8 @@ namespace RSBot.Core.Network.Hooks.Agent.Inventory
                         break;
                 }
 
+                if (cosId != 0) 
+                    response.WriteString(Game.Player.Name); //OwnerName
                 if (itemAmount > 1)
                     PacketManager.SendPacket(response, Destination);
                 else

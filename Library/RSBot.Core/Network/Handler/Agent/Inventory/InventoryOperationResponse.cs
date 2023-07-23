@@ -76,7 +76,7 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
                     break;
 
                 case InventoryOperation.SP_BUY_ITEM:
-                    ParseNpcToInventory(packet, Game.Player.Inventory);
+                    ParseNpcToInventory(packet, Game.Player.Inventory, Game.Player.UniqueId);
                     break;
 
                 case InventoryOperation.SP_SELL_ITEM:
@@ -258,7 +258,12 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
 
             if (destinationSlot == 0xFE) //gold
             {
-                Game.Player.Gold += packet.ReadUInt();
+                var goldAmount = packet.ReadUInt();
+                Game.Player.Gold += goldAmount;
+             
+                EventManager.FireEvent("OnPickupGold", goldAmount);
+
+                Log.Notify($"Picked up [{goldAmount}] gold");
                 return;
             }
 
@@ -289,7 +294,7 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
         /// Parses the NPC to inventory.
         /// </summary>
         /// <param name="packet">The packet.</param>
-        private static void ParseNpcToInventory(Packet packet, InventoryItemCollection inventory)
+        private static void ParseNpcToInventory(Packet packet, InventoryItemCollection inventory, uint entityUniqueId)
         {
             byte[] destinationSlots = null;
             ushort amount = 0;
@@ -298,7 +303,8 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
             var tabIndex = packet.ReadByte();
             var tabSlot = packet.ReadByte();
 
-            if (Game.ClientType > GameClientType.Chinese)
+            if (Game.ClientType > GameClientType.Chinese && 
+                Game.ClientType != GameClientType.Rigid)
             {
                 amount = packet.ReadUShort();
                 itemAmount = packet.ReadByte();
@@ -339,7 +345,7 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
                     OptLevel = refShopGoodObj.OptLevel
                 });
 
-                EventManager.FireEvent("OnBuyItem", destinationSlots[0]);
+                EventManager.FireEvent("OnBuyItem", destinationSlots[0], entityUniqueId);
             }
             else
             {
@@ -355,7 +361,7 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
                         OptLevel = refShopGoodObj.OptLevel
                     });
 
-                    EventManager.FireEvent("OnBuyItem", slot);
+                    EventManager.FireEvent("OnBuyItem", slot, entityUniqueId);
                 }
             }
         }
@@ -367,7 +373,7 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
         private static void ParseTokenNpcToInventory(Packet packet)
         {
             var inventory = Game.Player.Inventory;
-            ParseNpcToInventory(packet, inventory);
+            ParseNpcToInventory(packet, inventory, Game.Player.UniqueId);
 
             var unknown1 = packet.ReadByte();
             var tokenSlot = packet.ReadByte();
@@ -591,7 +597,7 @@ namespace RSBot.Core.Network.Handler.Agent.Inventory
             if (cos == null)
                 return;
 
-            ParseNpcToInventory(packet, cos.Inventory);
+            ParseNpcToInventory(packet, cos.Inventory, cos.UniqueId);
         }
 
         /// <summary>

@@ -6,6 +6,7 @@ using RSBot.Default.Bundle.Loop;
 using RSBot.Default.Bundle.Loot;
 using RSBot.Default.Bundle.Movement;
 using RSBot.Default.Bundle.PartyBuffing;
+using RSBot.Default.Bundle.Protection;
 using RSBot.Default.Bundle.Resurrect;
 using RSBot.Default.Bundle.Target;
 
@@ -19,7 +20,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The berzerk.
         /// </value>
-        public static BerzerkBundle Berzerk { get; private set; }
+        public static BerzerkBundle Berzerk { get; } = new();
 
         /// <summary>
         /// Gets the avoidance.
@@ -27,7 +28,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The avoidance.
         /// </value>
-        public static AvoidanceBundle Avoidance { get; private set; }
+        public static AvoidanceBundle Avoidance { get; } = new();
 
         /// <summary>
         /// Gets the movement.
@@ -35,7 +36,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The movement.
         /// </value>
-        public static MovementBundle Movement { get; private set; }
+        public static MovementBundle Movement { get; } = new();
 
         /// <summary>
         /// Gets the buff.
@@ -43,7 +44,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The buff.
         /// </value>
-        public static BuffBundle Buff { get; private set; }
+        public static BuffBundle Buff { get; } = new();
 
         /// <summary>
         /// Gets the party buff.
@@ -51,7 +52,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The party buff.
         /// </value>
-        public static PartyBuffingBundle PartyBuff { get; private set; }
+        public static PartyBuffingBundle PartyBuff { get; } = new();
 
         /// <summary>
         /// Gets the target.
@@ -59,7 +60,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The target.
         /// </value>
-        public static TargetBundle Target { get; private set; }
+        public static TargetBundle Target { get; } = new();
 
         /// <summary>
         /// Gets the attack.
@@ -67,7 +68,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The attack.
         /// </value>
-        public static AttackBundle Attack { get; private set; }
+        public static AttackBundle Attack { get; } = new();
 
         /// <summary>
         /// Gets the loot.
@@ -75,7 +76,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The loot.
         /// </value>
-        public static LootBundle Loot { get; private set; }
+        public static LootBundle Loot { get; } = new();
 
         /// <summary>
         /// Gets the loop.
@@ -83,7 +84,7 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The loop.
         /// </value>
-        public static LoopBundle Loop { get; private set; }
+        public static LoopBundle Loop { get; } = new();
 
         /// <summary>
         /// Gets the Resurrect.
@@ -91,42 +92,32 @@ namespace RSBot.Default.Bundle
         /// <value>
         /// The Resurrect.
         /// </value>
-        public static ResurrectBundle Resurrect { get; private set; }
+        public static ResurrectBundle Resurrect { get; } = new();
+
+        /// <summary>
+        /// Gets the Protection.
+        /// </summary>
+        /// <value>
+        /// The Protection.
+        /// </value>
+        public static ProtectionBundle Protection { get; } = new();
 
         /// <summary>
         /// Reloads this instance.
         /// </summary>
         public static void Reload()
         {
-            Berzerk = Berzerk ?? new BerzerkBundle();
             Berzerk.Refresh();
-
-            Avoidance = Avoidance ?? new AvoidanceBundle();
             Avoidance.Refresh();
-
-            Movement = Movement ?? new MovementBundle();
             Movement.Refresh();
-
-            Buff = Buff ?? new BuffBundle();
             Buff.Refresh();
-
-            PartyBuff = PartyBuff ?? new PartyBuffingBundle();
             PartyBuff.Refresh();
-
-            Target = Target ?? new TargetBundle();
             Target.Refresh();
-
-            Attack = Attack ?? new AttackBundle();
             Attack.Refresh();
-
-            Loot = Loot ?? new LootBundle();
             Loot.Refresh();
-
-            Loop = Loop ?? new LoopBundle();
             Loop.Refresh();
-
-            Resurrect = Resurrect ?? new ResurrectBundle();
             Resurrect.Refresh();
+            Protection.Refresh();
         }
 
         public static void Stop()
@@ -141,6 +132,7 @@ namespace RSBot.Default.Bundle
             Loot?.Stop();
             Loop?.Stop();
             Resurrect?.Stop();
+            Protection?.Stop();
         }
     }
 }

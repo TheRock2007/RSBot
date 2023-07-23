@@ -1,9 +1,9 @@
 ﻿using RSBot.Core.Components;
 using RSBot.Core.Network;
-using RSBot.Core.Objects;
 using RSBot.Core.Objects.Spawn;
 using System;
 using System.Threading;
+using RSBot.Core.Objects.Inventory;
 
 namespace RSBot.Core.Objects.Cos
 {
@@ -96,7 +96,7 @@ namespace RSBot.Core.Objects.Cos
         /// The AbilityPet's Inventory.
         /// </value>
         public InventoryItemCollection Inventory { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the bionic.
         /// </summary>
@@ -151,7 +151,17 @@ namespace RSBot.Core.Objects.Cos
             var packet = new Packet(0x70CB);
             packet.WriteByte(0);
             packet.WriteInt(UniqueId);
-            PacketManager.SendPacket(packet, PacketDestination.Server);
+
+            var awaitCallback = new AwaitCallback(response => 
+            {
+                var result = response.ReadByte();
+           
+                return result == 1 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail; 
+            }, 0xB0CB);
+
+            PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
+            awaitCallback.AwaitResponse();
+          
 
             return true;
         }
@@ -177,42 +187,46 @@ namespace RSBot.Core.Objects.Cos
         /// Pickups the specified item unique identifier.
         /// </summary>
         /// <param name="itemUniqueId">The item unique identifier.</param>
-        public virtual void Pickup(uint itemUniqueId)
+        public virtual bool Pickup(uint itemUniqueId)
         {
             var packet = new Packet(0x70C5);
             packet.WriteUInt(UniqueId);
-            packet.WriteByte(0x08);
+            packet.WriteByte(CosCommand.Pickup);
             packet.WriteUInt(itemUniqueId);
 
             var callback = new AwaitCallback(response =>
             {
                 var result = response.ReadByte();
+
                 if (result == 0x01)
                 {
-                    response.ReadByte();
+                    response.ReadByte(); //command
+
                     return response.ReadUInt() == UniqueId ? AwaitCallbackResult.Success : AwaitCallbackResult.ConditionFailed;
                 }
 
                 return AwaitCallbackResult.Fail;
-            }, 0xB034);
+            }, 0xB0C5);
 
             PacketManager.SendPacket(packet, PacketDestination.Server, callback);
             callback.AwaitResponse();
+
+            return callback.IsCompleted;
         }
 
         /// <summary>
         /// Moves this instance.
         /// </summary>
-        public void MoveTo(Position destination)
+        public void MoveTo(Position destination, bool sleep = true)
         {
             var packet = new Packet(0x70C5);
             packet.WriteUInt(UniqueId);
-            packet.WriteByte(1); //Move
+            packet.WriteByte(CosCommand.Move); //Move
             packet.WriteByte(1); //To point
-            packet.WriteUShort(destination.RegionId);
+            packet.WriteUShort(destination.Region);
 
             //Normal world
-            if (!destination.IsInDungeon)
+            if (!destination.Region.IsDungeon)
             {
                 packet.WriteShort(destination.XOffset);
                 packet.WriteShort(destination.ZOffset);
@@ -232,7 +246,8 @@ namespace RSBot.Core.Objects.Cos
             awaitCallback.AwaitResponse();
             var distance = Game.Player.Movement.Source.DistanceTo(destination);
             //Wait to finish the step
-            Thread.Sleep(Convert.ToInt32((distance / Game.Player.ActualSpeed) * 10000));
+            if(sleep)
+                Thread.Sleep(Convert.ToInt32((distance / Game.Player.ActualSpeed) * 10000));
         }
 
         /// <summary>
@@ -303,6 +318,18 @@ namespace RSBot.Core.Objects.Cos
 
         public virtual void Deserialize(Packet packet)
         {
+        }
+
+        public override bool Update(int delta)
+        {
+            base.Update(delta);
+
+            if (Bionic == null)
+                return false;
+
+            Movement = Bionic.Movement;
+
+            return true;
         }
     }
 }

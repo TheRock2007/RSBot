@@ -10,7 +10,7 @@ namespace RSBot.Core.Objects.Skill
         /// <summary>
         /// Gets or sets the identifier.
         /// </summary>
-        public uint Id { get; set; }
+        public uint Id;
 
         /// <summary>
         /// Gets or sets the enabled.
@@ -228,6 +228,15 @@ namespace RSBot.Core.Objects.Skill
                 SkillManager.CastBuff(this, target);
             else
                 SkillManager.CastSkill(this, target);
+        }
+
+        /// <summary>
+        /// Casts the skill at the target position.
+        /// </summary>
+        /// <param name="target"></param>
+        public void CastAt(Position target)
+        {
+            SkillManager.CastSkillAt(this, target);
         }
 
         /// <summary>

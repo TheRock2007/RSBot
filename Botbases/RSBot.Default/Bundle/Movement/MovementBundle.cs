@@ -2,6 +2,7 @@
 using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects.Spawn;
+using System.Threading;
 
 namespace RSBot.Default.Bundle.Movement
 {
@@ -39,13 +40,29 @@ namespace RSBot.Default.Bundle.Movement
             if (Game.Player.Movement.Moving)
                 return;
 
-            var distance = Game.Player.Movement.Source.DistanceTo(Container.Bot.Area.Position);
-            var hasCollision = CollisionManager.HasCollisionBetween(Game.Player.Movement.Source, Container.Bot.Area.Position);
+            if (PlayerConfig.Get("RSBot.Party.AlwaysFollowPartyMaster", false) &&
+                Game.Party.IsInParty &&
+                !Game.Party.IsLeader)
+            {
+                if (Game.Player.InAction)
+                    return;
+
+                var player = Game.Party.Leader?.Player;
+                if (player != null && player.Position.DistanceToPlayer() >= 10)
+                {
+                    Game.Player.MoveTo(player.Position);
+                }
+
+                return;
+            }
+
+            var distance = Game.Player.Position.DistanceTo(Container.Bot.Area.Position);
+            var hasCollision = CollisionManager.HasCollisionBetween(Game.Player.Position, Container.Bot.Area.Position);
 
             //Go back if the player is out of the radius
-            if ((distance > Container.Bot.Area.Radius || (Config.WalkToCenter && distance > 10)) && !hasCollision)
+            if ((distance > Container.Bot.Area.Radius || (Config.WalkToCenter && distance > 3)) && !hasCollision)
             {
-                EventManager.FireEvent("OnChangeStatusText", "Walking to center");
+                Log.Status("Walking to center");
                 Game.Player.MoveTo(Container.Bot.Area.Position);
 
                 return;
@@ -54,11 +71,23 @@ namespace RSBot.Default.Bundle.Movement
             if (Config.WalkToCenter)
                 return;
 
-            EventManager.FireEvent("OnChangeStatusText", "Walking around");
+            Log.Status("Walking around");
 
+            //Find a not colliding position. Do it in a while loop to prevent the bot from processing it in the next cycle (tick).
+            //This is how we can find our next position very fast instead of waiting for the next circle to come.
             var destination = Container.Bot.Area.GetRandomPosition();
-            if (!CollisionManager.HasCollisionBetween(Game.Player.Movement.Source, destination))
-                Game.Player.MoveTo(destination, false);
+
+            var attempt = 0;
+            while (CollisionManager.HasCollisionBetween(Game.Player.Position, destination) && distance < Container.Bot.Area.Radius)
+            {
+                destination = Container.Bot.Area.GetRandomPosition();
+                if (attempt++ > 3)
+                    break;
+
+                Thread.Sleep(100);
+            }
+
+            Game.Player.MoveTo(destination, false);
         }
 
         /// <summary>

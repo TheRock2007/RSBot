@@ -42,6 +42,8 @@ namespace RSBot.Core.Network.Handler.Agent
                 if (!isMounted)
                 {
                     Game.Player.Vehicle = null;
+                    Game.Player.Transport = null;
+
                     return;
                 }
 
@@ -57,15 +59,17 @@ namespace RSBot.Core.Network.Handler.Agent
 
                 if (cosUniqueId == Game.Player.Fellow?.UniqueId)
                     Game.Player.Vehicle = Game.Player.Fellow;
+
+                var bionicPosition = Game.Player.Vehicle.Bionic.Position;
+                Game.Player.Vehicle.StopMoving(bionicPosition);
+                Game.Player.StopMoving(bionicPosition);
             }
 
             //Assertion: only player's are supported to have active vehicles. Think it's the same in the client.
-            var owner = SpawnManager.GetEntity<SpawnedPlayer>(e => e.UniqueId == ownerUniqueId);
-            if (owner == null)
+            if(!SpawnManager.TryGetEntity<SpawnedPlayer>(ownerUniqueId, out var owner))
                 return;
-
-            var cos = SpawnManager.GetEntity<SpawnedCos>(e => e.UniqueId == cosUniqueId);
-            if (cos == null)
+            
+            if(!SpawnManager.TryGetEntity<SpawnedCos>(cosUniqueId, out var cos))
                 return;
 
             owner.OnTransport = isMounted;

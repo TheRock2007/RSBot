@@ -1,6 +1,7 @@
-﻿using RSBot.Core;
+using RSBot.Core;
 using RSBot.Core.Event;
 using RSBot.Core.Network;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RSBot.General.PacketHandler
@@ -38,11 +39,11 @@ namespace RSBot.General.PacketHandler
             if (result != 1)
                 return;
 
-            BotWindow.SetStatusTextLang("WaitingUserForSelectCharacter");
+            Log.StatusLang("WaitingUserForSelectCharacter");
 
             var charCount = packet.ReadByte();
 
-            var lobbyCharacters = new string[charCount];
+            var lobbyCharacters = new (byte level, string name)[charCount];
 
             for (var i = 0; i < charCount; i++)
             {
@@ -103,29 +104,46 @@ namespace RSBot.General.PacketHandler
                 }
 
                 if (!characterDeletionFlag)
-                    lobbyCharacters[i] = name;
+                    lobbyCharacters[i] = (level, name);
 
                 Log.NotifyLang("PlayerDetected", name, level);
             }
 
             var username = GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername");
-            var selectedAccount = Components.Accounts.SavedAccounts.Find(p => p.Username == username);
+            var selectedAccount = Components.Accounts.SavedAccounts?.Find(p => p.Username == username);
             if (selectedAccount == null)
                 return;
 
-            selectedAccount.Characters = lobbyCharacters.ToList();
-            Components.Accounts.Save();
+            selectedAccount.Characters = lobbyCharacters.Select(p => p.name).ToList();
 
             EventManager.FireEvent("OnCharacterListReceived");
 
-            if (string.IsNullOrWhiteSpace(selectedAccount.SelectedCharacter))
+            if (string.IsNullOrWhiteSpace(selectedAccount.SelectedCharacter) || 
+                !lobbyCharacters.Any(p => p.name == selectedAccount.SelectedCharacter))
             {
-                BotWindow.SetStatusTextLang("SelectYourCharacterManually");
-                return;
+                if(charCount == 0)
+                {
+                    Log.Warn("There are no characters on this account!");
+                    return;
+                }
+
+                if (GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectFirst"))
+                {
+                    selectedAccount.SelectedCharacter = lobbyCharacters.FirstOrDefault().name;
+                }
+                else if (GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectHigher"))
+                {
+                    selectedAccount.SelectedCharacter = lobbyCharacters.MaxBy(p => p.level).name;
+                }
+                else
+                {
+                    Log.StatusLang("SelectYourCharacterManually");
+                    return;
+                }
             }
 
-            if (lobbyCharacters.Contains(selectedAccount.SelectedCharacter))
-                Components.AutoLogin.EnterGame(selectedAccount.SelectedCharacter);
+            Components.Accounts.Save();
+            Components.AutoLogin.EnterGame(selectedAccount.SelectedCharacter);
         }
     }
 }

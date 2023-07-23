@@ -1,5 +1,5 @@
 ﻿using RSBot.Core;
-using RSBot.Default.Bot.Objects;
+using RSBot.Core.Objects;
 using SDUI.Controls;
 using System;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace RSBot.Default.Views.Dialogs
 {
-    public partial class TrainingAreasDialog : CleanForm
+    public partial class TrainingAreasDialog : UIWindowBase
     {
         private const string DIALOG_AREA_NAME = "Enter area name";
         private const string DIALOG_AREA_DESC = "Example: For my custom party at jangan";
@@ -29,16 +29,17 @@ namespace RSBot.Default.Views.Dialogs
             var selectedItem = listView.SelectedItems[0];
             PlayerConfig.Set("RSBot.Training.Index", selectedItem.Index);
 
-            var trainingArea = selectedItem.Tag as TrainingArea;
-            if (trainingArea == null)
+            if (selectedItem.Tag is not Area trainingArea)
             {
                 DialogResult = DialogResult.Retry;
                 return;
             }
 
-            PlayerConfig.Set<float>("RSBot.Area.X", trainingArea.Position.X);
-            PlayerConfig.Set<float>("RSBot.Area.Y", trainingArea.Position.Y);
-            PlayerConfig.Set<int>("RSBot.Area.Radius", trainingArea.Radius);
+            PlayerConfig.Set("RSBot.Area.Region", trainingArea.Position.Region);
+            PlayerConfig.Set("RSBot.Area.X", trainingArea.Position.XOffset);
+            PlayerConfig.Set("RSBot.Area.Y", trainingArea.Position.YOffset);
+            PlayerConfig.Set("RSBot.Area.Z", trainingArea.Position.ZOffset);
+            PlayerConfig.Set("RSBot.Area.Radius", trainingArea.Radius);
         }
 
         private void TrainingAreas_Load(object sender, EventArgs e)
@@ -55,11 +56,10 @@ namespace RSBot.Default.Views.Dialogs
                 if(split.Length <= 0)
                     continue;
 
-                var trainingArea = TrainingArea.FromSplit(split);
-                if (trainingArea == null)
+                if (!Area.TryParse(split, out var trainingArea))
                     continue;
 
-                var regionName = Game.ReferenceManager.GetTranslation(trainingArea.Position.RegionId.ToString());
+                var regionName = Game.ReferenceManager.GetTranslation(trainingArea.Position.Region.ToString());
 
                 var listViewItem = listView.Items.Add(new ListViewItem
                 {
@@ -96,16 +96,16 @@ namespace RSBot.Default.Views.Dialogs
 
             if(dialog.ShowDialog() == DialogResult.OK)
             {
-                var position = Game.Player.Movement.Source;
+                var position = Game.Player.Position;
 
-                var trainingArea = new TrainingArea
+                var trainingArea = new Area
                 {
                     Name = dialog.TrainingName.Text,
                     Position = position,
                     Radius = (int)dialog.Radius.Value
                 };
 
-                var regionName = Game.ReferenceManager.GetTranslation(trainingArea.Position.RegionId.ToString());
+                var regionName = Game.ReferenceManager.GetTranslation(trainingArea.Position.Region.ToString());
 
                 var listViewItem = listView.Items.Add(new ListViewItem
                 {
@@ -123,9 +123,23 @@ namespace RSBot.Default.Views.Dialogs
                 });
 
                 var areas = PlayerConfig.GetArray<string>("RSBot.Training.Areas").ToList();
-                areas.Add($"{trainingArea.Name}|{trainingArea.Position.X:0.0}|{trainingArea.Position.Y:0.0}|{trainingArea.Radius}");
+                areas.Add($"{trainingArea.Name}|{trainingArea.Position.Region:0.0}|{trainingArea.Position.XOffset:0.0}|{trainingArea.Position.YOffset:0.0}|{trainingArea.Position.ZOffset:0.0}|{trainingArea.Radius}");
                 PlayerConfig.SetArray("RSBot.Training.Areas", areas);
             }
+        }
+
+        private void removeSelectedAreaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView.SelectedItems.Count <= 0)
+                return;
+
+            var selectedIndex = listView.SelectedIndices[0];
+            var areas = PlayerConfig.GetArray<string>("RSBot.Training.Areas").ToList();
+            areas.RemoveAt(selectedIndex);
+
+            listView.Items.RemoveAt(selectedIndex);
+
+            PlayerConfig.SetArray("RSBot.Training.Areas", areas.ToArray());
         }
     }
 }

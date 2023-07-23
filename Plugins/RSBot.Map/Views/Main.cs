@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace RSBot.Map.Views
@@ -17,6 +18,11 @@ namespace RSBot.Map.Views
     [System.ComponentModel.ToolboxItem(false)]
     public partial class Main : UserControl
     {
+        /// <summary>
+        /// Is active debug mode <c>true</c> otherwise <c>false</c>
+        /// </summary>
+        private bool _debug;
+
         /// <summary>
         /// The grid size
         /// </summary>
@@ -63,22 +69,38 @@ namespace RSBot.Map.Views
         private float _scale = SectorSize / 192.0f;
 
         /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        private BufferedGraphicsContext bufferedGraphicsContext;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        private BufferedGraphics bufferedGraphics;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Main"/> class.
         /// </summary>
         public Main()
         {
             InitializeComponent();
 
+            _debug = GlobalConfig.Get<bool>("RSBot.DebugEnvironment");
+
             _cachedImages = _cachedImages ?? new Dictionary<string, Image>();
 
             EventManager.SubscribeEvent("OnEnterGame", OnEnterGame);
 
+            bufferedGraphicsContext = BufferedGraphicsManager.Current;
+            bufferedGraphicsContext.MaximumBuffer = new Size(mapCanvas.Width + 1, mapCanvas.Height + 1);
+            bufferedGraphics = bufferedGraphicsContext.Allocate(mapCanvas.CreateGraphics(), mapCanvas.ClientRectangle);
+
             // All
             comboViewType.SelectedIndex = 6;
+            checkEnableCollisions.Checked = CollisionManager.Enabled;
 
-#if !DEBUG
-            labelSectorInfo.Visible = false;
-#endif
+            if (!_debug)
+                labelSectorInfo.Visible = false;
         }
 
         #region Core Handlers
@@ -140,7 +162,7 @@ namespace RSBot.Map.Views
                 var x = GetMapX(position);
                 var y = GetMapY(position);
 
-                var img = (Image)_mapEntityImages[entityIndex].Clone();
+                using var img = (Image)_mapEntityImages[entityIndex].Clone();
 
                 if (entityIndex == 0)
                 {
@@ -149,7 +171,7 @@ namespace RSBot.Map.Views
                         y - img.Height / 2);
                 }
                 else
-                    gfx.DrawImage(img, x - img.Width, y - img.Height);
+                    gfx.DrawImage(img, x - img.Width / 2, y - img.Height / 2);
             }
             catch { }
         }
@@ -221,18 +243,17 @@ namespace RSBot.Map.Views
 
             try
             {
-#if DEBUG
                 if (Game.Player.Movement.HasDestination)
                 {
-                    DrawCircleAt(graphics, Game.Player.Movement.Destination, Color.Red, 5);
-                    DrawCircleAt(graphics, Game.Player.Movement.Destination, Color.Black, 3);
-
-                    using var pen = new Pen(Color.White, 1);
-                    pen.DashStyle = DashStyle.Dash;
+                    graphics.SmoothingMode = SmoothingMode.HighQuality;
+                    using var pen = new Pen(Color.BlanchedAlmond, 1);
+                    pen.DashStyle = DashStyle.Dot;
                     DrawLineAt(graphics, Game.Player.Movement.Source, Game.Player.Movement.Destination, pen);
 
+                    DrawCircleAt(graphics, Game.Player.Movement.Destination, Color.PaleGreen, 4);
+                    graphics.SmoothingMode = SmoothingMode.HighSpeed;
                 }
-#endif
+
                 //Draw walk script
                 if (ScriptManager.Running)
                 {
@@ -248,15 +269,11 @@ namespace RSBot.Map.Views
 
                 if (Kernel.Bot.Running)
                 {
-                    if (float.TryParse(PlayerConfig.Get("RSBot.Area.X", "0"), out var xCoord) &&
-                        float.TryParse(PlayerConfig.Get("RSBot.Area.Y", "0"), out var yCoord) &&
-                        int.TryParse(PlayerConfig.Get("RSBot.Area.Radius", "50"), out var radius))
-                    {
-                        var position = new Position(xCoord, yCoord);
+                    var position = Kernel.Bot.Botbase.Area.Position;
+                    var radius = Kernel.Bot.Botbase.Area.Radius;
 
-                        DrawCircleAt(graphics, position, Color.DarkRed.Alpha(100), radius * 2);
-                        DrawCircleAt(graphics, position, Color.LawnGreen.Alpha(50), radius);
-                    }
+                    DrawCircleAt(graphics, position, Color.DarkRed.Alpha(100), radius * 2);
+                    DrawCircleAt(graphics, position, Color.LawnGreen.Alpha(50), radius);
                 }
 
                 if (comboViewType.SelectedIndex == 0 || comboViewType.SelectedIndex == 6)
@@ -268,10 +285,17 @@ namespace RSBot.Map.Views
                             AddGridItem(entry.Record.GetRealName(), entry.Rarity.GetName(),
                                 entry.Record.Level, entry.Movement.Source);
 
+                            if (Game.SelectedEntity?.UniqueId == entry.UniqueId)
+                                DrawCircleAt(graphics, entry.Position, Color.Wheat.Alpha(100), 6);
+
+                            //Other style for mobs behind obstacles
+                            if (entry.IsBehindObstacle)
+                                DrawCircleAt(graphics, entry.Position, Color.DarkRed.Alpha(100), 6);
+
                             if (entry.Rarity == MonsterRarity.Unique || entry.Rarity == MonsterRarity.Unique2)
-                                DrawPointAt(graphics, entry.Movement.Source, 5);
+                                DrawPointAt(graphics, entry.Position, 5);
                             else
-                                DrawPointAt(graphics, entry.Position, !entry.IsBehindObstacle ? 4 : 2); //Other style for mobs behind obstacles
+                                DrawPointAt(graphics, entry.Position, 4);
                         }
                     }
                 }
@@ -298,8 +322,12 @@ namespace RSBot.Map.Views
                     {
                         foreach (var member in Game.Party.Members.ToArray())
                         {
-                            if (!(Game.Player.Movement.Source.DistanceTo(member.Position) < 50))
+                            if (Game.Player.Position.DistanceTo(member.Position) > 50)
                                 continue;
+
+                            if (member.Name == Game.Player.Name)
+                                continue;
+
                             DrawPointAt(graphics, member.Position, 6);
                             AddGridItem(member.Name, "Party Member", member.Level, member.Position);
                         }
@@ -356,31 +384,34 @@ namespace RSBot.Map.Views
 
         private void DrawCollisions(Graphics gfx)
         {
-            if (CollisionManager.HasActiveMeshes)
+            if (CollisionManager.HasActiveMeshes && CollisionManager.Enabled)
             {
-                //Draw collisions
                 foreach (var collisionNavmesh in CollisionManager.ActiveCollisionMeshes)
                 {
-                    foreach (var collider in collisionNavmesh.Collisions)
+                    var colliders = collisionNavmesh.Collisions
+                        .Where(c => c.Source.DistanceToPlayer() < 100 || c.Destination.DistanceToPlayer() < 100);
+
+                    foreach (var collider in colliders)
                         DrawLineAt(gfx, collider.Source, collider.Destination, Pens.Red);
                 }
+
                 if (!SpawnManager.TryGetEntities<SpawnedEntity>(out var entities))
                     return;
-                foreach (var entity in entities)
+
+                foreach (var entity in entities.Where(e => e.IsBehindObstacle))
                 {
                     var collision =
                         CollisionManager.GetCollisionBetween(Game.Player.Position, entity.Position);
+
                     if (!collision.HasValue)
                         continue;
-                    var rayPen = new Pen(Color.DeepSkyBlue);
-                    rayPen.DashStyle = DashStyle.Dot;
-                    rayPen.EndCap = LineCap.Square;
 
-                    DrawLineAt(gfx, Game.Player.Position, collision.Value.CollidedAt, Pens.DeepSkyBlue);
+                    DrawLineAt(gfx, Game.Player.Position, collision.Value.CollidedAt, Pens.GreenYellow);
                     DrawLineAt(gfx, collision.Value.CollidedWith.Source, collision.Value.CollidedWith.Destination, Pens.Yellow);
                 }
             }
         }
+
         private Image LoadSectorImage(string sectorImgName)
         {
             if (_cachedImages.ContainsKey(sectorImgName))
@@ -395,14 +426,15 @@ namespace RSBot.Map.Views
 
             return new Bitmap(SectorSize, SectorSize);
         }
+
         /// <summary>
         /// Get path from map layer
         /// </summary>
         private string GetLayerPath(Position p)
         {
-            if (p.IsInDungeon)
+            if (p.Region.IsDungeon)
             {
-                switch (p.RegionId)
+                switch (p.Region)
                 {
                     // Donwhang cave
                     case 32769:
@@ -460,6 +492,7 @@ namespace RSBot.Map.Views
             // Default as world map
             return "{0}x{1}.ddj";
         }
+
         /// <summary>
         /// Redraw the map image
         /// </summary>
@@ -469,13 +502,13 @@ namespace RSBot.Map.Views
             var p = Game.Player.Movement.Source;
 
             var layerPath = GetLayerPath(p);
-            if (p.XSector == _currentXSec && p.YSector == _currentYSec && _currentLayerPath == layerPath)
+            if (p.Region.X == _currentXSec && p.Region.Y == _currentYSec && _currentLayerPath == layerPath)
                 return;
 
-            _currentXSec = p.XSector;
-            _currentYSec = p.YSector;
+            _currentXSec = p.Region.X;
+            _currentYSec = p.Region.Y;
 
-            if (p.IsInDungeon)
+            if (p.Region.IsDungeon)
             {
                 _currentXSec = p.GetSectorFromOffset(p.XOffset);
                 _currentYSec = p.GetSectorFromOffset(p.YOffset);
@@ -496,17 +529,18 @@ namespace RSBot.Map.Views
                     for (var z = 0; z < GridSize; z++)
                     {
                         var sectorImgName = string.Format(layerPath, _currentXSec + x - 1, _currentYSec + z - 1);
-                        var bitmap = LoadSectorImage(sectorImgName);
+
+                        using var bitmap = LoadSectorImage(sectorImgName);
                         var pos = new Point(bitmap.Width * x, bitmap.Height * (GridSize - 1 - z));
 
                         gfx.DrawImage(bitmap, pos);
 
-#if DEBUG
-                        var pen = new Pen(Color.Black);
-                        pen.DashStyle = DashStyle.Dot;
-                        gfx.DrawRectangle(pen, new Rectangle(pos, new Size(SectorSize, SectorSize)));
-#endif
-                        bitmap.Dispose();
+                        if (_debug)
+                        {
+                            using var pen = new Pen(Color.Black);
+                            pen.DashStyle = DashStyle.Dot;
+                            gfx.DrawRectangle(pen, new Rectangle(pos, new Size(SectorSize, SectorSize)));
+                        }
                     }
                 }
             }
@@ -535,28 +569,28 @@ namespace RSBot.Map.Views
             return sizedBitmap;
         }
 
-        private void mapCanvas_Paint(object sender, PaintEventArgs e)
+        private void DrawObjects(Graphics graphics)
         {
             if (_currentSectorGraphic != null)
             {
-                e.Graphics.InterpolationMode = InterpolationMode.Bicubic;
-                e.Graphics.SmoothingMode = SmoothingMode.HighSpeed;
-                e.Graphics.PixelOffsetMode = PixelOffsetMode.HighSpeed;
-                e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
+                graphics.InterpolationMode = InterpolationMode.Bicubic;
+                graphics.SmoothingMode = SmoothingMode.HighSpeed;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighSpeed;
+                graphics.CompositingQuality = CompositingQuality.HighSpeed;
 
-                var pointX = mapCanvas.Width / 2f - SectorSize - Game.Player.Movement.Source.XSectorOffset / 10f * _scale;
-                var pointY = mapCanvas.Height / 2f - SectorSize * 2f + Game.Player.Movement.Source.YSectorOffset / 10f * _scale;
+                PointF point = new()
+                {
+                    X = mapCanvas.Width / 2f - SectorSize - Game.Player.Movement.Source.XSectorOffset / 10f * _scale,
+                    Y = mapCanvas.Height / 2f - SectorSize * 2f + Game.Player.Movement.Source.YSectorOffset / 10f * _scale
+                };
 
-                var point = new PointF(pointX, pointY);
+                graphics.DrawImage(_currentSectorGraphic, point);
 
-                e.Graphics.DrawImage(_currentSectorGraphic, point);
+                PopulateMapAndGrid(graphics);
+                DrawPointAt(graphics, Game.Player.Movement.Source, 0);
 
-                PopulateMapAndGrid(e.Graphics);
-                DrawPointAt(e.Graphics, Game.Player.Movement.Source, 0);
-
-#if DEBUG
-                DrawCollisions(e.Graphics);
-#endif
+                if (_debug)
+                    DrawCollisions(graphics);
             }
         }
 
@@ -565,17 +599,21 @@ namespace RSBot.Map.Views
             if (Game.Player == null)
                 return;
 
-            lblRegion.Text = Game.ReferenceManager.GetTranslation(Game.Player.Movement.Source.RegionId.ToString());
+            if (!Visible)
+                return;
 
-            lblX.Text = Game.Player.Movement.Source.X.ToString("0.0");
-            lblY.Text = Game.Player.Movement.Source.Y.ToString("0.0");
+            lblRegion.Text = Game.ReferenceManager.GetTranslation(Game.Player.Position.Region.ToString()) + (Game.Player.Position.Region.IsDungeon ? " (Dungeon)" : "");
 
-#if DEBUG
-            labelSectorInfo.Text = $"{Game.Player.Movement.Source.RegionId} ({Game.Player.Movement.Source.XSector}x{Game.Player.Movement.Source.YSector})";
-#endif
+            lblX.Text = Game.Player.Position.X.ToString("0.0");
+            lblY.Text = Game.Player.Position.Y.ToString("0.0");
 
+            if (_debug)
+                labelSectorInfo.Text = $"{Game.Player.Movement.Source.Region} ({Game.Player.Movement.Source.Region.X}x{Game.Player.Movement.Source.Region.Y})";
+
+            bufferedGraphics.Graphics.Clear(Color.Black);
             RedrawMap();
-            mapCanvas.Invalidate();
+            DrawObjects(bufferedGraphics.Graphics);
+            bufferedGraphics.Render();
         }
 
         private void checkBoxAutoSelectUniques_CheckedChanged(object sender, EventArgs e)
@@ -592,7 +630,10 @@ namespace RSBot.Map.Views
             if (Kernel.Bot.Running)
                 return;
 
-            if (SpawnManager.TryGetEntity<SpawnedMonster>(p => p.Record.Rarity == ObjectRarity.ClassD, out var uniqueEntity))
+            if (Game.SelectedEntity?.Record.Rarity == ObjectRarity.ClassD)
+                return;
+
+            if (SpawnManager.TryGetEntity<SpawnedMonster>(p => p.Record.Rarity == ObjectRarity.ClassD || p.Record.Rarity == ObjectRarity.ClassI, out var uniqueEntity))
                 uniqueEntity.TrySelect();
         }
 
@@ -613,6 +654,11 @@ namespace RSBot.Map.Views
             position.YOffset = (Game.Player.Movement.Source.YOffset + (((mapCanvas.Height / 2f - e.Y) / SectorSize) * 192f * 10));
 
             Game.Player.MoveTo(position, false);
+        }
+
+        private void checkEnableCollisions_CheckedChanged(object sender, EventArgs e)
+        {
+            CollisionManager.Enabled = checkEnableCollisions.Checked;
         }
     }
 }
